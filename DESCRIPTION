@@ -1,9 +1,28 @@
 Package: causalBatch
 Type: Package
-Title: What the package does (short line)
+Title: Causal Batch Effects
 Version: 1.0
 Date: 2024-01-21
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Eric Bridgeford
+Maintainer: Eric Bridgeford <ericwb95@gmail.com>
+Description: A package for using causal techniques to detect and correct for batch effects in high-dimensional scientific data sets.
+Depends:
+  R (>= 4.2.0)
+biocViews:
+Imports:
+  cdcsis,
+  sva,
+  MatchIt,
+  nnet
+URL:
+  https://github.com/neurodata/causal_batch
+Encoding: UTF-8
+VignetteBuilder: knitr
+Suggests:
+    knitr,
+    rmarkdown,
+    parallel,
+    testthat,
+    covr,
+    roxygen2
+License: MIT
