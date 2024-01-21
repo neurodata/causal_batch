@@ -7,7 +7,6 @@
 #' ignorability condiiton) to derive causal conclusions. See citation for more details as to the conditions
 #' under which conclusions derived are causal.
 #' 
-#' 
 #' @param Ys an \code{[n, d]} matrix, for the outcome variables with \code{n} samples in \code{d} dimensions.
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
@@ -26,7 +25,6 @@
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' @references Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011). 
 #' @references W Evan Johnson, et al. "Adjusting batch effects in microarray expression data using empirical Bayes methods" Biostatistics (2007). 
-#' 
 #' 
 #' @section Details:
 #' For more details see the help vignette:

@@ -26,3 +26,4 @@ Suggests:
     covr,
     roxygen2
 License: MIT
+RoxygenNote: 7.3.0

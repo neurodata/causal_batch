@@ -9,10 +9,8 @@
 #' 
 #' @importFrom cdcsis cdcov.test
 #' @param Ys Either:
-#' \itemize{
-#'\item{\code{[n, d]} matrix}{the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
-#'\item{\code{[n, n]} distance matrix}{A distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{FALSE}.}}
-#' }
+#' \item{\code{[n, d]} matrix}{the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
+#' \item{\code{[n, n]} distance matrix}{A distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{FALSE}.}
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
 #' @param R the number of repetitions for permutation testing. Defaults to \code{1000}.
@@ -25,10 +23,8 @@
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
 #' 
 #' @return a list, containing the following:
-#' \itemize{
 #' \item{Test}{The outcome of the statistical test.}
 #' \item{Retained.Ids}{The sample indices retained after vertex matching, which correspond to the samples for which statistical inference is performed.}
-#' }
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' @references Eric W. Bridgeford, et al. "Learning sources of variability from high-dimensional observational studies" arXiv (2023). 
 #' @references Xueqin Wang, et al. "Conditional Distance Correlation" American Statistical Association (2015).
