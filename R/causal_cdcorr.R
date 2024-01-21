@@ -22,17 +22,20 @@
 #' will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise distance matrix for \code{Ys}.
 #' @param seed a random seed to set. Defaults to \code{1}.
 #' @param num.threads The number of threads for parallel processing (if desired). Defaults to \code{1}.
+#' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
 #' 
 #' @return a list, containing the following:
 #' \itemize{
 #' \item{Test}{The outcome of the statistical test.}
 #' \item{Retained.Ids}{The sample indices retained after vertex matching, which correspond to the samples for which statistical inference is performed.}
 #' }
+#' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' @references Eric W. Bridgeford, et al. "Learning sources of variability from high-dimensional observational studies" arXiv (2023). 
+#' @references Xueqin Wang, et al. "Conditional Distance Correlation" American Statistical Association (2015).
 #' 
 #' @section Details:
 #' For more details see the help vignette:
-#' \code{vignette("cb.cdcorr", package = "causalBatch")}
+#' \code{vignette("cb.detect.caus_cdcorr", package = "causalBatch")}
 #' 
 #' @author Eric W. Bridgeford
 #' 
@@ -42,12 +45,13 @@
 #' cb.detect.cdcorr(sim$Y, sim$Batch, sim$X)
 #' 
 #' @export
-cb.detect.cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1) {
+cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1,
+                                  retain.ratio=0.05) {
   Xs <- as.data.frame(Xs)
   
   # vector match for propensity trimming, and then reduce sub-sample to the
   # propensity matched subset
-  retain.ids <- which(cb.detect.vm_trim(Ts, Xs))
+  retain.ids <- cb.detect.vm_trim(Ts, Xs, retain.ratio=retain.ratio)
   if (length(retain.ids) == 0) {
     stop("No samples remain after balancing.")
   }
@@ -74,14 +78,15 @@ cb.detect.cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distan
 #' A function for implementing the vector matching procedure, a pre-processing step for
 #' causal conditional distance correlation. Uses propensity scores to strategically include/exclude
 #' samples from subsequent inference, based on whether (or not) there are samples with similar propensity scores
-#' across all treatment levels. It is imperative that this function is used in conjunction with domain
-#' expertise (e.g., to ensure that the covariates are not colliders, and that the system satisfies the strong
-#' ignorability condiiton) to derive causal conclusions.
+#' across all treatment levels (conceptually, a k-way "propensity trimming"). 
+#' It is imperative that this function is used in conjunction with domain expertise to ensure that the covariates are not colliders, 
+#' and that the system satisfies the strong ignorability condiiton to derive causal conclusions.
 #' 
 #' @importFrom nnet multinom
 #' 
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
+#' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
 #' @return a \code{[m]} vector containing the indices of samples retained after vector matching.
 #' 
 #' @references Michael J. Lopez, et al. "Estimation of Causal Effects with Multiple Treatments" Statistical Science (2017). 
@@ -94,7 +99,7 @@ cb.detect.cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distan
 #' cb.detect.vm_trim(sim$Batch, sim$X)
 #' 
 #' @export
-cb.detect.vm_trim <- function(Ts, Xs) {
+cb.detect.vm_trim <- function(Ts, Xs, retain.ratio=0.05) {
   Xs = as.data.frame(Xs)
   
   # Fitting the Multinomial Logistic Regression Model
@@ -136,7 +141,13 @@ cb.detect.vm_trim <- function(Ts, Xs) {
   
   # Finding observations that satisfy balance condition for all treatments
   balanced_ids <- apply(balance_check, 1, all)
-  return(balanced_ids)
+  retain.ids <- which(balanced_ids)
+  
+  if (length(retain.ids) < retain.ratio*length(Ts)) {
+    warning("Few samples retained by vector matching.")
+  }
+  
+  return(retain.ids)
 }
 
 #' A utility to one-hot encode a treatment vector.
@@ -157,10 +168,10 @@ ohe <- function(Ts) {
 
 #' A utility to compute the zero-one distances for a treatment vector.
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
-#' @return \code{[n, K]} a one-hot encoding of \code{Ts}.
+#' @return \code{[n, n]} the pairwise zero-one distance matrix.
 #' @author Eric W. Bridgeford
 zero_one_dist <- function(Ts) {
   Ts_ohe <- ohe(Ts)
   
-  return(dist(Ts_ohe))
+  return(dist(Ts_ohe)/sqrt(2))
 }
