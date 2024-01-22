@@ -2,7 +2,7 @@ alpha = 0.1
 eps = 0.2
 
 test_that("reject null when balanced and ATE", {
-  sim.high <- cb.sims.sim_linear(n=100)
+  sim.high <- cb.sims.sim_linear(n=200)
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                num.threads = parallel::detectCores(),
@@ -11,7 +11,7 @@ test_that("reject null when balanced and ATE", {
 })
 
 test_that("reject null when imbalanced and ATE", {
-  sim.low <- cb.sims.sim_linear(n=100, unbalancedness=1.5)
+  sim.low <- cb.sims.sim_linear(n=200, unbalancedness=1.5)
   
   res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs, R=100)
   expect_true(res$Test$p.value < alpha)
@@ -20,7 +20,7 @@ test_that("reject null when imbalanced and ATE", {
 test_that("typically fails to reject null when balanced and ATE=0", {
   nrep <- 50
   pwr_test <- sapply(1:nrep, function(i) {
-    sim.high <- cb.sims.sim_linear(n=100, null=TRUE)
+    sim.high <- cb.sims.sim_linear(n=200, null=TRUE)
     
     res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                  num.threads = parallel::detectCores(),
@@ -36,7 +36,7 @@ test_that("typically fails to reject null when balanced and ATE=0", {
 test_that("typically fails to reject null when imbalanced and ATE=0", {
   nrep <- 50
   pwr_test <- sapply(1:nrep, function(i) {
-    sim.low <- cb.sims.sim_linear(n=100, unbalancedness = 1.5, null=TRUE)
+    sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 1.5, null=TRUE)
     
     res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                  num.threads = parallel::detectCores(),
@@ -48,14 +48,14 @@ test_that("typically fails to reject null when imbalanced and ATE=0", {
 })
 
 test_that("works when covariates are given as a vector", {
-  sim.high <- cb.sims.sim_linear(n=100)
+  sim.high <- cb.sims.sim_linear(n=200)
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, as.vector(sim.high$Xs), R=100)
   expect_true(res$Test$p.value < alpha)
 })
 
 test_that("works with >1 covariate levels", {
-  sim.high <- cb.sims.sim_linear(n=100)
+  sim.high <- cb.sims.sim_linear(n=200)
   sim.high$Xs <- cbind(sim.high$Xs, runif(100))
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
@@ -65,14 +65,14 @@ test_that("works with >1 covariate levels", {
 })
 
 test_that("rejects null with non-linearities and ATE", {
-  sim.high <- cb.sims.sim_sigmoid(n=100)
+  sim.high <- cb.sims.sim_sigmoid(n=200)
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                num.threads = parallel::detectCores(),
                                R=100)
   expect_true(res$Test$p.value < alpha)
   
-  sim.low <- cb.sims.sim_sigmoid(n=100, unbalancedness=1.5)
+  sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness=1.5)
   
   res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                num.threads = parallel::detectCores(),
@@ -84,7 +84,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
   nrep <- 50
   # balanced
   pwr_test.bal <- sapply(1:nrep, function(i) {
-    sim.high <- cb.sims.sim_sigmoid(n=100, null=TRUE)
+    sim.high <- cb.sims.sim_sigmoid(n=200, null=TRUE)
     
     res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                  num.threads = parallel::detectCores(),
@@ -95,7 +95,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
   
   # imbalanced
   pwr_test.imbal <- sapply(1:nrep, function(i) {
-    sim.low <- cb.sims.sim_sigmoid(n=100, unbalancedness = 1.5, null=TRUE)
+    sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness = 1.5, null=TRUE)
     
     res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                  num.threads = parallel::detectCores(),
@@ -106,7 +106,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
 })
 
 test_that("throws error when no samples are retained", {
-  sim.low <- cb.sims.sim_linear(n=100, unbalancedness = 10)
+  sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 10)
   
   expect_error(suppressWarnings(cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                                       num.threads = parallel::detectCores(),
@@ -114,7 +114,7 @@ test_that("throws error when no samples are retained", {
 })
 
 test_that("raises warning when few samples are retained", {
-  sim.low <- cb.sims.sim_linear(n=100, unbalancedness = 3)
+  sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 3)
   
   expect_warning(cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs, R=100,
                                        num.threads = parallel::detectCores(),

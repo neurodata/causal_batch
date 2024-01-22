@@ -29,10 +29,10 @@ cb.correct.caus_cComBat(
 \value{
 a list, containing the following:
 \itemize{
-\item{Ys.corrected}{an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.}
-\item{Ts}{\code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.}
-\item{Xs}{the \code{r} covariates/confounding variables for each of the \code{m} retained samples.}
-\item{Retained.Ids}{\code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.}
+   \item{\code{Ys.corrected}} an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.
+   \item{\code{Ts}} \code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.
+   \item{\code{Xs}} the \code{r} covariates/confounding variables for each of the \code{m} retained samples.
+   \item{\code{Retained.Ids}} a \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
 }
 }
 \description{

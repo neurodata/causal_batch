@@ -13,8 +13,8 @@
 #' @importFrom stats var
 #' @param Ys Either:
 #' \itemize{
-#' \item{\code{[n, d]} matrix, the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
-#' \item{\code{[n, n]} distance matrix, a distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{TRUE}.}
+#'    \item{\code{[n, d]} matrix} the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.
+#'    \item{\code{[n, n]} \code{dist} object} a distance object for the \code{n} samples. In this case, \code{distance} should be \code{TRUE}.
 #' }
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
@@ -29,8 +29,10 @@
 #' @param ddx whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.
 #' 
 #' @return a list, containing the following:
-#' \item{Test}{The outcome of the statistical test.}
-#' \item{Retained.Ids}{The sample indices retained after vertex matching, which correspond to the samples for which statistical inference is performed.}
+#' \itemize{
+#'    \item{\code{Test}} The outcome of the statistical test, from \code{\link[cdcsis]{cdcov.test}}.
+#'    \item{\code{Retained.Ids}} The sample indices retained after vertex matching, which correspond to the samples for which statistical inference is performed.
+#' }
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' @references Eric W. Bridgeford, et al. "Learning sources of variability from high-dimensional observational studies" arXiv (2023). 
 #' @references Xueqin Wang, et al. "Conditional Distance Correlation" American Statistical Association (2015).

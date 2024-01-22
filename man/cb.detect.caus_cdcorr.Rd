@@ -20,8 +20,8 @@ cb.detect.caus_cdcorr(
 \arguments{
 \item{Ys}{Either:
 \itemize{
-\item{\code{[n, d]} matrix, the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
-\item{\code{[n, n]} distance matrix, a distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{TRUE}.}
+   \item{\code{[n, d]} matrix} the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.
+   \item{\code{[n, n]} \code{dist} object} a distance object for the \code{n} samples. In this case, \code{distance} should be \code{TRUE}.
 }}
 
 \item{Ts}{\code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.}
@@ -46,8 +46,10 @@ will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise dista
 }
 \value{
 a list, containing the following:
-\item{Test}{The outcome of the statistical test.}
-\item{Retained.Ids}{The sample indices retained after vertex matching, which correspond to the samples for which statistical inference is performed.}
+\itemize{
+   \item{\code{Test}} The outcome of the statistical test, from \code{\link[cdcsis]{cdcov.test}}.
+   \item{\code{Retained.Ids}} The sample indices retained after vertex matching, which correspond to the samples for which statistical inference is performed.
+}
 }
 \description{
 A function for implementing the causal conditional distance correlation (causal cDCorr) algorithm.

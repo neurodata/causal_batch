@@ -18,8 +18,8 @@ covariate.match(covar.tx, covar.cont, match.form, match.args = NULL)
 \value{
 a list containing:
 \itemize{
-\item{I.mat.k}{index matrix of control samples that have a match.}
-\item{M.mat.k}{match matrix of treatment samples that are correspondingly matched to a control.}
+   \item{\code{I.mat.k}} index matrix of control samples that have a match.
+   \item{\code{M.mat.k}} match matrix of treatment samples that are correspondingly matched to a control.
 }
 }
 \description{

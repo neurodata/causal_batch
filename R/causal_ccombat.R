@@ -18,10 +18,10 @@
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @return a list, containing the following:
 #' \itemize{
-#' \item{Ys.corrected}{an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.}
-#' \item{Ts}{\code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.}
-#' \item{Xs}{the \code{r} covariates/confounding variables for each of the \code{m} retained samples.}
-#' \item{Retained.Ids}{\code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.}
+#'    \item{\code{Ys.corrected}} an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.
+#'    \item{\code{Ts}} \code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.
+#'    \item{\code{Xs}} the \code{r} covariates/confounding variables for each of the \code{m} retained samples.
+#'    \item{\code{Retained.Ids}} a \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
 #' }
 #' 
 #' @author Eric W. Bridgeford
@@ -62,7 +62,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
-#' @return \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
+#' @return an \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
 #' 
 #' @section Details:
 #' For more details see the help vignette:
@@ -125,8 +125,8 @@ cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="near
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}.
 #' @return a list containing:
 #' \itemize{
-#' \item{I.mat.k}{index matrix of control samples that have a match.}
-#' \item{M.mat.k}{match matrix of treatment samples that are correspondingly matched to a control.}
+#'    \item{\code{I.mat.k}} index matrix of control samples that have a match.
+#'    \item{\code{M.mat.k}} match matrix of treatment samples that are correspondingly matched to a control.
 #' }
 covariate.match <- function(covar.tx, covar.cont, match.form, match.args=NULL) {
   n.kprime <- dim(covar.tx)[1]; n.k <- dim(covar.cont)[1]
