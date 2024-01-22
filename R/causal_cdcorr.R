@@ -44,7 +44,7 @@
 #' @examples
 #' library(causalBatch)
 #' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-#' cb.detect.cdcorr(sim$Ys, sim$Ts, sim$Xs)
+#' cb.detect.caus_cdcorr(sim$Ys, sim$Ts, sim$Xs)
 #' 
 #' @export
 cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1,
@@ -109,7 +109,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' @examples
 #' library(causalBatch)
 #' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-#' cb.detect.vm_trim(sim$Ts, sim$Xs)
+#' cb.align.vm_trim(sim$Ts, sim$Xs)
 #' 
 #' @export
 cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE) {

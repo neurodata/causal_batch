@@ -75,7 +75,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' @examples
 #' library(causalBatch)
 #' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-#' cb.correct.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
+#' cb.align.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' @export
 cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
   # obtain the smallest batch

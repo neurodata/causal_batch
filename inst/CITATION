@@ -1,0 +1,19 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?",
+  author   = personList(as.person("Eric W. Bridgeford"),
+                        as.person("Michael Powell"),
+                        as.person("Gregory Kiar"),
+                        as.person("Stephanie Noble"),
+                        as.person("Jaewon Chung"),
+                        as.person("Sambit Panda"),
+                        as.person("Ross Lawrence"),
+                        as.person("Ting Xu"),
+                        as.person("Michael Milham"),
+                        as.person("Brian Caffo"),
+                        as.person("Joshua T. Vogelstein")),
+  journal  = "bioRxiv",
+  year     = "2023",
+  pages    = "2021.09.03.458920",
+  doi      = "10.1101/2021.09.03.458920"
+)
