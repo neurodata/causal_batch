@@ -44,9 +44,9 @@ for each batch. Defaults to \code{200}.}
 }
 \value{
 a list, containing the following:
-\item{Y}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
-\item{Batch}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
-\item{X}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
+\item{Ys}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
+\item{Ts}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
+\item{Xs}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
 \item{Eps}{an \code{[n, 1]} matrix, containing the error for each sample.}
 \item{x.bounds}{the theoretical bounds for the covariate values.}
 \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}

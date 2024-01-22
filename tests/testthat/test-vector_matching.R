@@ -68,6 +68,7 @@ test_that("vector matching with one odd-ball per-group", {
   expect_true(mean(res) > .8)
 })
 
-test_that("moderate overlap example retains more samples than limited overlap example", {
-  
+test_that("high overlap example retains more samples than limited overlap example", {
+  sim.high <- cb.sims.sim_sigmoid(unbalancedness=1)
+  cb.align.vm_trim(sim.high$Ts, sim.high$Xs)
 })
