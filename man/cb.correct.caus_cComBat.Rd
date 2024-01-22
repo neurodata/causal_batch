@@ -24,7 +24,7 @@ cb.correct.caus_cComBat(
 
 \item{match.args}{A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.}
 
-\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.}
+\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 }
 \value{
 a list, containing the following:

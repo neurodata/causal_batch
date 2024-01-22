@@ -9,8 +9,10 @@
 #' 
 #' @importFrom cdcsis cdcov.test
 #' @param Ys Either:
-#' \item{\code{[n, d]} matrix}{the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
-#' \item{\code{[n, n]} distance matrix}{A distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{FALSE}.}
+#' \itemize{
+#' \item{\code{[n, d]} matrix, the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
+#' \item{\code{[n, n]} distance matrix, a distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{TRUE}.}
+#' }
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
 #' @param R the number of repetitions for permutation testing. Defaults to \code{1000}.
@@ -20,7 +22,8 @@
 #' will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise distance matrix for \code{Ys}.
 #' @param seed a random seed to set. Defaults to \code{1}.
 #' @param num.threads The number of threads for parallel processing (if desired). Defaults to \code{1}.
-#' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
+#' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
+#' @param trace whether to show convergence messages for multinomial. Defaults to \code{FALSE}.
 #' 
 #' @return a list, containing the following:
 #' \item{Test}{The outcome of the statistical test.}
@@ -42,12 +45,12 @@
 #' 
 #' @export
 cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1,
-                                  retain.ratio=0.05) {
+                                  retain.ratio=0.05, trace=FALSE) {
   Xs <- as.data.frame(Xs)
   
   # vector match for propensity trimming, and then reduce sub-sample to the
   # propensity matched subset
-  retain.ids <- cb.detect.vm_trim(Ts, Xs, retain.ratio=retain.ratio)
+  retain.ids <- cb.align.vm_trim(Ts, Xs, retain.ratio=retain.ratio, trace=trace)
   if (length(retain.ids) == 0) {
     stop("No samples remain after balancing.")
   }
@@ -83,10 +86,11 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
+#' @param trace whether to show convergence messages for multinomial. Defaults to \code{FALSE}.
 #' @return a \code{[m]} vector containing the indices of samples retained after vector matching.
 #' 
 #' @references Michael J. Lopez, et al. "Estimation of Causal Effects with Multiple Treatments" Statistical Science (2017). 
-#' 
+#' ran
 #' @author Eric W. Bridgeford
 #' 
 #' @examples
@@ -95,7 +99,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' cb.detect.vm_trim(sim$Batch, sim$X)
 #' 
 #' @export
-cb.detect.vm_trim <- function(Ts, Xs, retain.ratio=0.05) {
+cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, trace=FALSE) {
   Xs = as.data.frame(Xs)
   
   # Fitting the Multinomial Logistic Regression Model
@@ -103,7 +107,7 @@ cb.detect.vm_trim <- function(Ts, Xs, retain.ratio=0.05) {
   Ts <- as.numeric(factor(Ts, levels=unique(Ts)))
   Ts_unique = unique(Ts)
   
-  m <- multinom(factor(Ts) ~ ., data = as.data.frame(Xs))
+  m <- multinom(factor(Ts) ~ ., data = as.data.frame(Xs), trace=trace)
   
   # Making predictions using the fitted model
   pred <- predict(m, newdata = as.data.frame(Xs), type = "probs")

@@ -12,7 +12,7 @@
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
-#' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
+#' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @return a list, containing the following:
 #' \itemize{
 #' \item{Y.tilde}{an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.}
@@ -37,7 +37,7 @@
 #' 
 #' @export
 cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
-  retain.ids <- unique(do.call(cb.correct.kway_match, list(Ts, Xs, match.form, match.args=match.args)))
+  retain.ids <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, match.args=match.args)))
   
   Y.tilde <- Y[retain.ids,]; X.tilde <- Xs[retain.ids,]; T.tilde <- Ts[retain.ids]
   
@@ -65,7 +65,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 #' cb.correct.kway_match(sim$Batch, data.frame(Covar=sim$X), "Covar")
 #' @export
-cb.correct.kway_match <- function(Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
+cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
   # obtain the smallest batch
   Ts <- as.character(Ts)
   Xs <- cbind(data.frame(Batch=Ts), Xs)

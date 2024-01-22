@@ -13,13 +13,16 @@ cb.detect.caus_cdcorr(
   distance = FALSE,
   seed = 1,
   num.threads = 1,
-  retain.ratio = 0.05
+  retain.ratio = 0.05,
+  trace = FALSE
 )
 }
 \arguments{
 \item{Ys}{Either:
-\item{\code{[n, d]} matrix}{the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
-\item{\code{[n, n]} distance matrix}{A distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{FALSE}.}}
+\itemize{
+\item{\code{[n, d]} matrix, the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
+\item{\code{[n, n]} distance matrix, a distance matrix for the \code{n} samples. In this case, \code{distance} should be \code{TRUE}.}
+}}
 
 \item{Ts}{\code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.}
 
@@ -37,7 +40,9 @@ will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise dista
 
 \item{num.threads}{The number of threads for parallel processing (if desired). Defaults to \code{1}.}
 
-\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.}
+\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
+
+\item{trace}{whether to show convergence messages for multinomial. Defaults to \code{FALSE}.}
 }
 \value{
 a list, containing the following:
