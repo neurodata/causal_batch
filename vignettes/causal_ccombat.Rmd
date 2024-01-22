@@ -1,0 +1,24 @@
+---
+title: "Causal Conditional ComBat"
+author: "Eric W. Bridgeford"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cb.correct.causal_ccombat}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE}
+require(causalBatch)
+require(ggplot2)
+n = 200
+```
+

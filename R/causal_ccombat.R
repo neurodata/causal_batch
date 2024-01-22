@@ -60,6 +60,14 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
 #' @return \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
 #' 
+#' @section Details:
+#' For more details see the help vignette:
+#' \code{vignette("cb.balancing", package = "causalBatch")}
+#' @author Eric W. Bridgeford
+#' 
+#' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
+#' @references Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011). 
+#' 
 #' @examples
 #' library(causalBatch)
 #' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)

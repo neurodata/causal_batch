@@ -92,6 +92,9 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' @references Michael J. Lopez, et al. "Estimation of Causal Effects with Multiple Treatments" Statistical Science (2017). 
 #' ran
 #' @author Eric W. Bridgeford
+#' @section Details:
+#' For more details see the help vignette:
+#' \code{vignette("cb.balancing", package = "causalBatch")}
 #' 
 #' @examples
 #' library(causalBatch)
