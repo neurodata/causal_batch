@@ -20,10 +20,10 @@ test_that("Causal cComBat makes outcomes for each group more similar", {
 })
 
 test_that("raises warning when few samples are retained", {
-  sim.low <- cb.sims.sim_linear(n=100, unbalancedness = 3)
+  sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 2)
   
   expect_warning(cb.correct.caus_cComBat(sim.low$Ys, sim.low$Ts, data.frame(Covar=sim.low$Xs), 
-                                         match.form="Covar", retain.ratio=0.5))
+                                         match.form="Covar", retain.ratio=0.7))
 })
 
 test_that("raises error when no samples are retained", {

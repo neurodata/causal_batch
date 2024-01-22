@@ -76,7 +76,8 @@ BiocManager::install("sva")
 
 which will install in about 1 minute on a machine with the recommended specs.
 
-The `causalBatch` package functions with all packages in their latest versions as they appear on `CRAN` on January 22, 2024. Users can check [CRAN snapshot](https://mran.microsoft.com/timemachine/) for details. The versions of software are, specifically:
+The `causalBatch` package functions with all packages in their latest versions as they appear on `CRAN` on January 22, 2024. The versions of software are, specifically:
+
 ```
 sva=3.50.0
 cdcsis=2.0.3
