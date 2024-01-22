@@ -7,6 +7,7 @@
 #' ignorability condiiton) to derive causal conclusions. See citation for more details as to the conditions
 #' under which conclusions derived are causal.
 #' 
+#' @importFrom sva ComBat
 #' @param Ys an \code{[n, d]} matrix, for the outcome variables with \code{n} samples in \code{d} dimensions.
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
@@ -15,9 +16,9 @@
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @return a list, containing the following:
 #' \itemize{
-#' \item{Y.tilde}{an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.}
-#' \item{T.tilde}{\code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.}
-#' \item{X.tilde}{the \code{r} covariates/confounding variables for each of the \code{m} retained samples.}
+#' \item{Ys.corrected}{an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.}
+#' \item{Ts}{\code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.}
+#' \item{Xs}{the \code{r} covariates/confounding variables for each of the \code{m} retained samples.}
 #' \item{Retained.Ids}{\code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.}
 #' }
 #' 
@@ -33,19 +34,19 @@
 #' @examples
 #' library(causalBatch)
 #' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-#' cb.correct.caus_cComBat(sim$Y, sim$Batch, data.frame(Covar=sim$X), "Covar")
+#' cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
 cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
   retain.ids <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, match.args=match.args)))
   
-  Y.tilde <- Y[retain.ids,]; X.tilde <- Xs[retain.ids,]; T.tilde <- Ts[retain.ids]
+  Y.tilde <- Ys[retain.ids,,drop=FALSE]; X.tilde <- Xs[retain.ids,,drop=FALSE]; T.tilde <- Ts[retain.ids]
   
   mod <- model.matrix(as.formula(sprintf("~%s", match.form)), data=X.tilde)
   dat.norm <- t(ComBat(t(Y.tilde), T.tilde, mod = mod))
-  return(list(Data=dat.norm,
-              T.tilde=T.tilde,
-              X.tilde=X.tilde,
+  return(list(Ys.corrected=dat.norm,
+              Ts=T.tilde,
+              Xs=X.tilde,
               Retained.Ids=retain.ids))
 }
 
@@ -71,7 +72,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' @examples
 #' library(causalBatch)
 #' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-#' cb.correct.kway_match(sim$Batch, data.frame(Covar=sim$X), "Covar")
+#' cb.correct.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' @export
 cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
   # obtain the smallest batch
@@ -81,7 +82,7 @@ cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="near
   batch.names <- names(batch.sum)
   tx.batch <- batch.names[which.min(batch.sum)]
   rownames(Xs) <- 1:nrow(Xs)
-  covar.tx <- Xs[batches == tx.batch,,drop=FALSE]
+  covar.tx <- Xs[Ts == tx.batch,,drop=FALSE]
   
   
   paired.matches <- lapply(batch.names[batch.names != tx.batch], function(batch) {
@@ -105,6 +106,8 @@ cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="near
 }
 
 #' Pairwise covariate matching
+#' @importFrom dplyr mutate
+#' @importFrom MatchIt matchit
 #' @param covar.tx the treatment covariate/label matrix.
 #' @param covar.cont the control covariate/label matrix.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
@@ -114,7 +117,6 @@ cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="near
 #' \item{I.mat.k}{index matrix of control samples that have a match.}
 #' \item{M.mat.k}{match matrix of treatment samples that are correspondingly matched to a control.}
 #' }
-#' @importFrom MatchIt matchit
 covariate.match <- function(covar.tx, covar.cont, match.form, match.args=NULL) {
   n.kprime <- dim(covar.tx)[1]; n.k <- dim(covar.cont)[1]
   n.matches <- floor(n.k/n.kprime)

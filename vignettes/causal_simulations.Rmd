@@ -68,7 +68,6 @@ plot.sim.expected <- function(Ys, Ts, Xs, Ytrue, Ttrue, Xtrue, title="",
                        name="Group/Batch") +
     theme_bw()
 }
-
 ```
 
 # Sigmoidal Simulation

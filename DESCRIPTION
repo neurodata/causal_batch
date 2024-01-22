@@ -13,7 +13,8 @@ Imports:
   cdcsis,
   sva,
   MatchIt,
-  nnet
+  nnet,
+  dplyr
 URL:
   https://github.com/neurodata/causal_batch
 Encoding: UTF-8

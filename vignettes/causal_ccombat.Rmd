@@ -22,3 +22,73 @@ require(ggplot2)
 n = 200
 ```
 
+To start, we will begin with a simulation example, similar to the ones we were working in for the simulations, which you can access from:
+
+```{r, eval=FALSE}
+vignette("cb.simulations", package="causalBatch")
+```
+
+Let's regenerate our working example data with some plotting code:
+
+```{r}
+# a function for plotting a scatter plot of the data
+plot.sim <- function(Ys, Ts, Xs, title="", 
+                     xlabel="Covariate",
+                     ylabel="Outcome (1st dimension)") {
+  data = data.frame(Y1=Ys[,1], Y2=Ys[,2], 
+                    Group=factor(Ts, levels=c(0, 1), ordered=TRUE), 
+                    Covariates=Xs)
+  
+  data %>%
+    ggplot(aes(x=Covariates, y=Y1, color=Group)) +
+    geom_point() +
+    labs(title=title, x=xlabel, y=ylabel) +
+    scale_x_continuous(limits = c(-1, 1)) +
+    scale_color_manual(values=c(`0`="#bb0000", `1`="#0000bb"), 
+                       name="Group/Batch") +
+    theme_bw()
+}
+```
+
+Next, we will generate a simulation:
+
+```{r, fig.width=5, fig.height=3}
+sim = cb.sims.sim_sigmoid(n=n, eff_sz=1, unbalancedness=1.5)
+
+plot.sim(sim$Ys, sim$Ts, sim$Xs, title="Sigmoidal Simulation")
+```
+It looks like the red group/batch tends to have outcomes exceeding the blue group/batch. We can test whether a group/batch effect can be detected. See the vignette on causal conditional distance correlation for more details, found at:
+
+```{r, eval=FALSE}
+vignette("cb.detect.caus_cdcorr", package="causalBatch")
+```
+
+Now to run the test and evaluate with $\alpha = 0.05$:
+
+```{r}
+result <- cb.detect.caus_cdcorr(sim$Ys, sim$Ts, sim$Xs, R=100)
+print(sprintf("p-value: %.4f", result$Test$p.value))
+```
+
+Since the $p$-value is $< \alpha$, this indicates that the data provide evidence to reject the null hypothesis in favor of the alternative (there is a causal group/batch effect). Next, we can correct for this effect using causal conditional ComBat. Note in particular that the covariates should be passed as a named data frame:
+
+```{r}
+cor.sim <- cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), match.form="Covar")
+```
+
+We can plot the augmented data after causal conditional ComBat has been applied, like so:
+
+```{r, fig.width=5, fig.height=3}
+plot.sim(cor.sim$Ys.corrected, cor.sim$Ts, cor.sim$Xs$Covar, title="Sigmoidal Simulation (causal ComBat corrected)")
+```
+
+We can see that the augmented data nearly perfectly overlaps across the two groups/batches, which can be confirmed using the causal conditional distance correlation:
+
+```{r}
+result.cor <- cb.detect.caus_cdcorr(cor.sim$Ys.corrected, cor.sim$Ts,
+                                    cor.sim$Xs$Covar, R=100)
+print(sprintf("p-value: %.4f", result.cor$Test$p.value))
+```
+
+Since the $p$-value is $> \alpha$, the data provide no evidence to reject the null hypothesis (that there is a causal group/batch effect) in favor of the alternative. Stated another way, the group/batch effect that was present before causal conditional ComBat correction is no longer detectable.
+

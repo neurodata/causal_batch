@@ -22,7 +22,6 @@ require(ggplot2)
 n = 200
 ```
 
-
 To start, we will begin with a simulation example, similar to the ones we were working in for the simulations, which you can access from:
 
 ```{r, eval=FALSE}
@@ -53,7 +52,7 @@ plot.sim <- function(Ys, Ts, Xs, title="",
 
 Next, we will generate a simulation:
 
-```{r}
+```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_sigmoid(n=n, eff_sz=1, unbalancedness=1.5)
 
 plot.sim(sim$Ys, sim$Ts, sim$Xs, title="Sigmoidal Simulation")
