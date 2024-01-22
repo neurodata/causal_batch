@@ -65,7 +65,7 @@ Before setting up the `causalBatch` package, users should have `R` version 4.2.0
 Users should install the following packages prior to installing `lolR`, from an `R` terminal:
 
 ```
-install.packages(c('cdcsis', 'MatchIt', 'nnet', 'dplyr', 'tidyverse'))
+install.packages(c('cdcsis', 'MatchIt', 'nnet', 'dplyr', 'tidyverse', 'magrittr'))
 
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
@@ -84,6 +84,7 @@ tidyverse=2.0.0
 dplyr=1.1.4
 MatchIt=4.5.5
 nnet=7.3.19
+magrittr=2.0.3
 ```
 
 If you are having an issue that you believe to be tied to software versioning issues, please drop us an [Issue](https://github.com/neurodata/causal_batch/issues). 
