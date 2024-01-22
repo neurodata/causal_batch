@@ -73,13 +73,15 @@ print(sprintf("p-value: %.4f", result$Test$p.value))
 Since the $p$-value is $< \alpha$, this indicates that the data provide evidence to reject the null hypothesis in favor of the alternative (there is a causal group/batch effect). Next, we can correct for this effect using causal conditional ComBat. Note in particular that the covariates should be passed as a named data frame:
 
 ```{r}
-cor.sim <- cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), match.form="Covar")
+cor.sim <- cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), 
+                                   match.form="Covar")
 ```
 
 We can plot the augmented data after causal conditional ComBat has been applied, like so:
 
 ```{r, fig.width=5, fig.height=3}
-plot.sim(cor.sim$Ys.corrected, cor.sim$Ts, cor.sim$Xs$Covar, title="Sigmoidal Simulation (causal cComBat corrected)")
+plot.sim(cor.sim$Ys.corrected, cor.sim$Ts, cor.sim$Xs$Covar,
+         title="Sigmoidal Simulation (causal cComBat corrected)")
 ```
 
 We can see that the augmented data nearly perfectly overlaps across the two groups/batches, which can be confirmed using the causal conditional distance correlation:
@@ -92,3 +94,32 @@ print(sprintf("p-value: %.4f", result.cor$Test$p.value))
 
 Since the $p$-value is $> \alpha$, the data provide no evidence to reject the null hypothesis (that there is a causal group/batch effect) in favor of the alternative. Stated another way, the group/batch effect that was present before causal conditional ComBat correction is no longer detectable.
 
+If we have multiple covariate values, you can specify custom formulas for the matching process using the standard R formula notation. For instance, if we had a second covariate value:
+
+```{r}
+Xs.2covar <- data.frame(Covar1=sim$Xs, Covar2=runif(n))
+```
+
+You could specify a formula instead like this:
+
+```{r}
+cor.sim <- cb.correct.caus_cComBat(sim$Ys, sim$Ts, Xs.2covar, 
+                                   match.form="Covar1 + Covar2")
+```
+
+You can also use the standard `MatchIt::matchit()` arguments to leverage custom matching algorithms. These are passed into the function using the `match.args` argument. For instance, consider if we have a third categorical covariate:
+
+```{r}
+Xs.3covar <- cbind(data.frame(Cat.Covar=factor(rbinom(n, size=1, 0.5))), 
+                   Xs.2covar)
+```
+
+If we wanted to leverage exact matching for the categorical covariate, we could specify to perform exact matching for `Cat.Covar`, and leave nearest-neighbor matching (without replacement) for `Covar1` and `Covar2`, exactly as you would for the `MatchIt::matchit()` package:
+
+```{r}
+match.args <- list(method="nearest", exact="Cat.Covar", replace=FALSE, 
+                   caliper=0.1)
+cor.sim <- cb.correct.caus_cComBat(sim$Ys, sim$Ts, Xs.3covar, 
+                                   match.form="Covar1 + Covar2 + Cat.Covar",
+                                   match.args=match.args)
+```
