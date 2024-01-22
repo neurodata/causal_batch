@@ -156,6 +156,10 @@ cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE) {
     warning("Few samples retained by vector matching.")
   }
   
+  if (length(retain.ids) == 0) {
+    stop("No samples retained by vector matching.")
+  }
+  
   return(retain.ids)
 }
 

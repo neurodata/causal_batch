@@ -84,9 +84,14 @@ test_that("as unbalancedness increases, fewer samples retained by VM", {
   expect_true(all(rank.lengths == c(3, 2, 1)))
 })
 
-test_that("throws warning when samples retained is low", {
+test_that("VM throws warning when samples retained is low", {
   sim.low <- cb.sims.sim_sigmoid(unbalancedness=5)
   expect_warning(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0.2))
+})
+
+test_that("VM throws error when no samples retained", {
+  sim.low <- cb.sims.sim_sigmoid(unbalancedness=10)
+  expect_error(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0))
 })
 
 approx.overlap <- function(X1, X2, nbreaks=100) {

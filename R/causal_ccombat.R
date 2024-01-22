@@ -38,7 +38,7 @@
 #' 
 #' @export
 cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
-  retain.ids <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, match.args=match.args)))
+  retain.ids <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, match.args=match.args, retain.ratio=retain.ratio)))
   
   Y.tilde <- Ys[retain.ids,,drop=FALSE]; X.tilde <- Xs[retain.ids,,drop=FALSE]; T.tilde <- Ts[retain.ids]
   
@@ -99,7 +99,11 @@ cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="near
   retain.ids <- as.numeric(c(names(I.mat), names(which(M.mat != 0))))
   
   if (length(retain.ids) < retain.ratio*length(Ts)) {
-    warning("Few samples retained by k-way matching.")
+    warning("Few samples retained by vector matching.")
+  }
+  
+  if (length(retain.ids) == 0) {
+    stop("No samples retained by vector matching.")
   }
   
   return(retain.ids)
