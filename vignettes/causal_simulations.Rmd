@@ -78,7 +78,7 @@ In this simulation, we will generate a sigmoidal simulation with $n=200$ samples
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_sigmoid(n=n)
 
-plot.sim(sim$Y, sim$Batch, sim$X, title="Sigmoidal Simulation")
+plot.sim(sim$Ys, sim$Ts, sim$Xs, title="Sigmoidal Simulation")
 ```
 
 The default is for the level of covariate overlap, the area under the curve upper-bounded by the minimum density across both groups/batches, is $1$:
@@ -90,7 +90,7 @@ print(sprintf("Covariate Overlap: %.3f", sim$Overlap))
 Notice that the outcomes for group/batch $0$ appear to generally be greater than the outcomes for group/batch $1$. This is confirmed by looking at the expected signal for each dimension, shown below as a line:
 
 ```{r, fig.width=5, fig.height=3}
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Sigmoidal Simulation")
 ```
@@ -100,14 +100,14 @@ When the covariates are balanced, the relationship is rather obvious and easy to
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_sigmoid(n=n, unbalancedness = 3)
 
-plot.sim(sim$Y, sim$Batch, sim$X, 
+plot.sim(sim$Ys, sim$Ts, sim$Xs, 
          title="Sigmoidal Simulation (Imbalanced Covariates)")
 ```
 
 In this case, using only the observed samples, it is much harder to tell that group/batch $0$ tends to have higher outcomes than group/batch $1$, despite the fact that the expected signals (for a given covariate level) are the same as the preceding simulation:
 
 ```{r, fig.width=5, fig.height=3}
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Sigmoidal Simulation")
 ```
@@ -123,7 +123,7 @@ If we shift `unbalancedness` below $1$, this pattern is reversed: group/batch $0
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_sigmoid(n=n, unbalancedness = 1/3)
 
-plot.sim(sim$Y, sim$Batch, sim$X, 
+plot.sim(sim$Ys, sim$Ts, sim$Xs, 
          title="Sigmoidal Simulation (Imbalanced Covariates)")
 ```
 
@@ -134,7 +134,7 @@ In this simulation, we will generate a linear simulation with $n=200$ samples, w
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_linear(n=n)
 
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Linear Simulation")
 ```
@@ -144,7 +144,7 @@ We can manipulate the ratio of samples in each group, via the $\pi$ argument, wh
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_linear(n=n, pi = 0.25)
 
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Linear Simulation (Imbalanced Groups/Batches)")
 ```
@@ -158,7 +158,7 @@ In this simulation, we will generate an impulse simulation with $n=200$ samples,
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_impulse(n=n)
 
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Impulse Simulation")
 ```
@@ -168,7 +168,7 @@ We can use the `nbreaks` argument to get finer (`nbreaks` is larger) or more coa
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_impulse(n=n, nbreaks=5)
 
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Impulse Simulation")
 ```
@@ -180,7 +180,7 @@ In this simulation, we will generate an impulse simulation with $n=200$ samples.
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_impulse_asycov(n=n, unbalancedness = 1)
 
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Impulse Simulation")
 ```
@@ -190,7 +190,7 @@ When we shift the `unbalancedness` higher, notice that the covariate distributio
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_impulse_asycov(n=n, unbalancedness = 4)
 
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Impulse Simulation (Asymmetric Covariates)")
 ```
@@ -200,7 +200,7 @@ This pattern/observation is again reversed when `unbalancedness` is below `1`:
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_impulse_asycov(n=n, unbalancedness = 1/5)
 
-plot.sim.expected(sim$Y, sim$Batch, sim$X,
+plot.sim.expected(sim$Ys, sim$Ts, sim$Xs,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Impulse Simulation (Asymmetric Covariates)")
 ```

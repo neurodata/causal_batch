@@ -16,8 +16,8 @@
 #' for each batch. Defaults to \code{200}.
 #' @return a list, containing the following:
 #' \item{Y}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
-#' \item{Batch}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
-#' \item{X}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
+#' \item{Ts}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
+#' \item{Xs}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
 #' \item{Eps}{an \code{[n, 1]} matrix, containing the error for each sample.}
 #' \item{x.bounds}{the theoretical bounds for the covariate values.}
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
@@ -80,7 +80,7 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
   
   # ys <- ys * -2*(batches - .5)
   
-  return(list(Y=cbind(matrix(ys, ncol=1), rnorm(n)), Batch=matrix(batches, ncol=1), X=matrix(xs, ncol=1),
+  return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
               Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, 
               Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha)))
 }
@@ -102,9 +102,9 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' @param nbreaks the number of breakpoints for computing the expected outcome at a given covariate level
 #' for each batch. Defaults to \code{200}.
 #' @return a list, containing the following:
-#' \item{Y}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
-#' \item{Batch}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
-#' \item{X}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
+#' \item{Ys}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
+#' \item{Ts}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
+#' \item{Xs}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
 #' \item{Eps}{an \code{[n, 1]} matrix, containing the error for each sample.}
 #' \item{x.bounds}{the theoretical bounds for the covariate values.}
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
@@ -162,7 +162,7 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1
     ytrue <- ytrue - eff_sz*batch_true
   }
   
-  return(list(Y=cbind(matrix(ys, ncol=1), rnorm(n)), Batch=matrix(batches, ncol=1), X=matrix(xs, ncol=1),
+  return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
               Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue,  
               Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha)))
 }
@@ -185,9 +185,9 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1
 #' @param nbreaks the number of breakpoints for computing the expected outcome at a given covariate level
 #' for each batch. Defaults to \code{200}.
 #' @return a list, containing the following:
-#' \item{Y}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
-#' \item{Batch}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
-#' \item{X}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
+#' \item{Ys}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
+#' \item{Ts}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
+#' \item{Xs}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
 #' \item{Eps}{an \code{[n, 1]} matrix, containing the error for each sample.}
 #' \item{x.bounds}{the theoretical bounds for the covariate values.}
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
@@ -250,7 +250,7 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
     ytrue <- ytrue - eff_sz*batch_true
   }
   
-  return(list(Y=cbind(matrix(ys, ncol=1), rnorm(n)), Batch=matrix(batches, ncol=1), X=matrix(xs, ncol=1),
+  return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
               Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue,  
               Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha)))
 }
@@ -273,9 +273,9 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' @param nbreaks the number of breakpoints for computing the expected outcome at a given covariate level
 #' for each batch. Defaults to \code{200}.
 #' @return a list, containing the following:
-#' \item{Y}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
-#' \item{Batch}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
-#' \item{X}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
+#' \item{Ys}{an \code{[n, 2]} matrix, containing the outcomes for each sample. The first dimension contains the "treatment effect".}
+#' \item{Ts}{an \code{[n, 1]} matrix, containing the group/batch labels for each sample.}
+#' \item{Xs}{an \code{[n, 1]} matrix, containing the covariate values for each sample.}
 #' \item{Eps}{an \code{[n, 1]} matrix, containing the error for each sample.}
 #' \item{x.bounds}{the theoretical bounds for the covariate values.}
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
@@ -335,7 +335,7 @@ cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalanc
     ytrue <- ytrue - eff_sz*batch_true
   }
   
-  return(list(Y=cbind(matrix(ys, ncol=1), rnorm(n)), Batch=matrix(batches, ncol=1), X=matrix(xs, ncol=1),
+  return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
               Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, 
               Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, alpha, beta, alpha)))
 }
