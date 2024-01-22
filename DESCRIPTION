@@ -19,6 +19,7 @@ URL:
 Encoding: UTF-8
 VignetteBuilder: knitr
 Suggests:
+    tidyr,
     knitr,
     rmarkdown,
     parallel,

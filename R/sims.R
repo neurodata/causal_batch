@@ -7,7 +7,7 @@
 #' @param eff_sz the treatment effect between the different groups. Defaults to \code{1}.
 #' @param alpha the alpha for the covariate sampling procedure. Defaults to \code{2}.
 #' @param unbalancedness the level of covariate dissimilarity between the covariates
-#' for each of the groups. Defaults to \code{4}.
+#' for each of the groups. Defaults to \code{1}.
 #' @param null whether to generate a null simulation. Defaults to \code{FALSE}. Same behavior can be achieved by setting \code{eff_sz = 0}.
 #' @param a the first parameter for the covariate/outcome relationship. Defaults to \code{-4}.
 #' @param b the second parameter for the covariate/outcome relationship. Defaults to \code{8}.
@@ -55,7 +55,7 @@
 #' sim = cb.sims.sim_sigmoid()
 #' 
 #' @export
-cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=4, null=FALSE, 
+cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1, null=FALSE, 
                         a=-4, b=8, err=1/2, nbreaks=200) {
   batches <- rbinom(n=n, size=1, prob=pi)
   
@@ -94,7 +94,7 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' @param eff_sz the treatment effect between the different groups. Defaults to \code{1}.
 #' @param alpha the alpha for the covariate sampling procedure. Defaults to \code{2}.
 #' @param unbalancedness the level of covariate dissimilarity between the covariates
-#' for each of the groups. Defaults to \code{4}.
+#' for each of the groups. Defaults to \code{1}.
 #' @param null whether to generate a null simulation. Defaults to \code{FALSE}. Same behavior can be achieved by setting \code{eff_sz = 0}.
 #' @param a the first parameter for the covariate/outcome relationship. Defaults to \code{-2}.
 #' @param b the second parameter for the covariate/outcome relationship. Defaults to \code{-1}.
@@ -142,7 +142,7 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' sim = cb.sims.sim_linear()
 #' 
 #' @export
-cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=4, err=1/2, 
+cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1, err=1/2, 
                               null=FALSE, a=-2, b=-1, nbreaks=200) {
   batches <- rbinom(n=n, size=1, prob=pi)
   
@@ -176,11 +176,11 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=4
 #' @param eff_sz the treatment effect between the different groups. Defaults to \code{1}.
 #' @param alpha the alpha for the covariate sampling procedure. Defaults to \code{2}.
 #' @param unbalancedness the level of covariate dissimilarity between the covariates
-#' for each of the groups. Defaults to \code{4}.
+#' for each of the groups. Defaults to \code{1}.
 #' @param null whether to generate a null simulation. Defaults to \code{FALSE}. Same behavior can be achieved by setting \code{eff_sz = 0}.
 #' @param a the first parameter for the covariate/outcome relationship. Defaults to \code{-0.5}.
 #' @param b the second parameter for the covariate/outcome relationship. Defaults to \code{1/2}.
-#' @param c the third parameter for the covariate/outcome relationship. Defaults to \code{4}.
+#' @param c the third parameter for the covariate/outcome relationship. Defaults to \code{1}.
 #' @param err the level of noise for the simulation. Defaults to \code{1/2}.
 #' @param nbreaks the number of breakpoints for computing the expected outcome at a given covariate level
 #' for each batch. Defaults to \code{200}.
@@ -230,7 +230,7 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=4
 #' sim = cb.sims.sim_impulse()
 #' 
 #' @export
-cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=4,
+cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1,
                                 err=1/2, null=FALSE, a=-.5, b=1/2, c=4, nbreaks=200) {
   batches <- rbinom(n=n, size=1, prob=pi)
   
@@ -264,11 +264,11 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' @param eff_sz the treatment effect between the different groups. Defaults to \code{1}.
 #' @param alpha the alpha for the covariate sampling procedure. Defaults to \code{2}.
 #' @param unbalancedness the level of covariate dissimilarity between the covariates
-#' for each of the groups. Defaults to \code{4}.
+#' for each of the groups. Defaults to \code{1}.
 #' @param null whether to generate a null simulation. Defaults to \code{FALSE}. Same behavior can be achieved by setting \code{eff_sz = 0}.
 #' @param a the first parameter for the covariate/outcome relationship. Defaults to \code{-0.5}.
 #' @param b the second parameter for the covariate/outcome relationship. Defaults to \code{1/2}.
-#' @param c the third parameter for the covariate/outcome relationship. Defaults to \code{4}.
+#' @param c the third parameter for the covariate/outcome relationship. Defaults to \code{1}.
 #' @param err the level of noise for the simulation. Defaults to \code{1/2}.
 #' @param nbreaks the number of breakpoints for computing the expected outcome at a given covariate level
 #' for each batch. Defaults to \code{200}.
@@ -315,7 +315,7 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' sim = cb.sims.sim_impulse_asycov()
 #' 
 #' @export
-cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=4, 
+cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1, 
                                null=FALSE, a=-.5, b=1/2, c=4, nbreaks=200) {
   batches <- rbinom(n=n, size=1, prob=pi)
   

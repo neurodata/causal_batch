@@ -9,7 +9,7 @@ cb.sims.sim_linear(
   pi = 0.5,
   eff_sz = 1,
   alpha = 2,
-  unbalancedness = 4,
+  unbalancedness = 1,
   err = 1/2,
   null = FALSE,
   a = -2,
@@ -29,7 +29,7 @@ to \code{0.5}.}
 \item{alpha}{the alpha for the covariate sampling procedure. Defaults to \code{2}.}
 
 \item{unbalancedness}{the level of covariate dissimilarity between the covariates
-for each of the groups. Defaults to \code{4}.}
+for each of the groups. Defaults to \code{1}.}
 
 \item{err}{the level of noise for the simulation. Defaults to \code{1/2}.}
 

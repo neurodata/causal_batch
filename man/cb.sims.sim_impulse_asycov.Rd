@@ -9,7 +9,7 @@ cb.sims.sim_impulse_asycov(
   pi = 0.5,
   eff_sz = 1,
   alpha = 2,
-  unbalancedness = 4,
+  unbalancedness = 1,
   null = FALSE,
   a = -0.5,
   b = 1/2,
@@ -29,7 +29,7 @@ to \code{0.5}.}
 \item{alpha}{the alpha for the covariate sampling procedure. Defaults to \code{2}.}
 
 \item{unbalancedness}{the level of covariate dissimilarity between the covariates
-for each of the groups. Defaults to \code{4}.}
+for each of the groups. Defaults to \code{1}.}
 
 \item{null}{whether to generate a null simulation. Defaults to \code{FALSE}. Same behavior can be achieved by setting \code{eff_sz = 0}.}
 
@@ -37,7 +37,7 @@ for each of the groups. Defaults to \code{4}.}
 
 \item{b}{the second parameter for the covariate/outcome relationship. Defaults to \code{1/2}.}
 
-\item{c}{the third parameter for the covariate/outcome relationship. Defaults to \code{4}.}
+\item{c}{the third parameter for the covariate/outcome relationship. Defaults to \code{1}.}
 
 \item{nbreaks}{the number of breakpoints for computing the expected outcome at a given covariate level
 for each batch. Defaults to \code{200}.}

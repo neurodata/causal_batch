@@ -29,8 +29,22 @@ cb.align.kway_match(
 \description{
 A function for performing k-way matching using the matchIt package. Looks for samples which have corresponding matches across all other treatment levels.
 }
+\section{Details}{
+
+For more details see the help vignette:
+\code{vignette("cb.balancing", package = "causalBatch")}
+}
+
 \examples{
 library(causalBatch)
 sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 cb.correct.kway_match(sim$Batch, data.frame(Covar=sim$X), "Covar")
+}
+\references{
+Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024).
+
+Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011).
+}
+\author{
+Eric W. Bridgeford
 }

@@ -26,6 +26,12 @@ across all treatment levels (conceptually, a k-way "propensity trimming").
 It is imperative that this function is used in conjunction with domain expertise to ensure that the covariates are not colliders, 
 and that the system satisfies the strong ignorability condiiton to derive causal conclusions.
 }
+\section{Details}{
+
+For more details see the help vignette:
+\code{vignette("cb.balancing", package = "causalBatch")}
+}
+
 \examples{
 library(causalBatch)
 sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
