@@ -80,6 +80,7 @@ sim = cb.sims.sim_sigmoid(n=n)
 
 plot.sim(sim$Y, sim$Batch, sim$X, title="Sigmoidal Simulation")
 ```
+
 The default is for the level of covariate overlap, the area under the curve upper-bounded by the minimum density across both groups/batches, is $1$:
 
 ```{r}
@@ -102,6 +103,7 @@ sim = cb.sims.sim_sigmoid(n=n, unbalancedness = 3)
 plot.sim(sim$Y, sim$Batch, sim$X, 
          title="Sigmoidal Simulation (Imbalanced Covariates)")
 ```
+
 In this case, using only the observed samples, it is much harder to tell that group/batch $0$ tends to have higher outcomes than group/batch $1$, despite the fact that the expected signals (for a given covariate level) are the same as the preceding simulation:
 
 ```{r, fig.width=5, fig.height=3}
@@ -136,6 +138,7 @@ plot.sim.expected(sim$Y, sim$Batch, sim$X,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Linear Simulation")
 ```
+
 We can manipulate the ratio of samples in each group, via the $\pi$ argument, where the probability a sample is from group/batch $1$ is $\pi$, and the probability a sample is from group/batch $0$ is $1 - \pi$. Notice that decreasing $\pi$ to $0.25$ yields more samples in batch $0$ than batch $1$:
 
 ```{r, fig.width=5, fig.height=3}
@@ -145,6 +148,7 @@ plot.sim.expected(sim$Y, sim$Batch, sim$X,
                   sim$Ytrue, sim$Ttrue, sim$Xtrue,
                   title="Linear Simulation (Imbalanced Groups/Batches)")
 ```
+
 and there are relatively few numbers of blue points in group/batch $1$.
 
 # Impulse Simulation
