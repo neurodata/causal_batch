@@ -2,4 +2,5 @@
 ^\.Rproj\.user$
 citation.bib
 README.md
-LICENSE
+LICENSE.md
+^LICENSE\.md$
