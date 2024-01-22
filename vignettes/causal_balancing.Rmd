@@ -19,7 +19,61 @@ knitr::opts_chunk$set(
 ```{r, message=FALSE}
 require(causalBatch)
 require(ggplot2)
-n = 200
+n = 300
 ```
 
+To begin, we will create some plotting code. This code will take a vector of covariate values, and generate a rugplot along with histograms for the covariate values of each group/batch.
 
+```{r}
+plot.covars <- function(Xs, Ts, title="", xlabel="Covariate", 
+                        ylabel="Density") {
+  data.frame(Batch=factor(Ts, levels=c(0, 1)), Covariate=Xs) %>%
+    ggplot(aes(x=Covariate, group=Batch, color=Batch)) +
+      geom_rug() +
+      geom_histogram(aes(fill=Batch), binwidth=0.1, position="identity",
+                     alpha=0.5) +
+      labs(title=title, x=xlabel, y=ylabel) +
+      scale_x_continuous(limits=c(-1, 1)) +
+      scale_color_manual(values=c(`0`="#bb0000", `1`="#0000bb"), 
+                         name="Group/Batch") +
+      scale_fill_manual(values=c(`0`="#bb0000", `1`="#0000bb"), 
+                         name="Group/Batch") +
+      theme_bw()
+}
+```
+
+generate some simulated data which is imbalanced, and some code to plot the covariates for the simulated data along with kernel density estimates of the covariates:
+
+```{r, fig.width=5, fig.height=3}
+sim.low <- cb.sims.sim_linear(n=n, unbalancedness=2)
+plot.covars(sim.low$Xs, sim.low$Ts, title="Sample covariate values")
+```
+
+Note particularly that there are many samples in group/batch $0$ with covariate values much smaller than the smallest attained by samples in group/batch $1$, and there are many samples in group/batch $1$ with covariate values much larger than the largest attained by samples in group/batch $2$. 
+
+# Vector Matching
+
+Conceptually, vector matching can be thought of as a form of "propensity trimming"; that is, it will remove samples from a given group/batch which are dissimilar from one (or more) other groups/batches on the basis of their propensity scores. This is a relatively coarse approach to balancing covariates across the groups/batches:
+
+```{r, fig.width=5, fig.height=3}
+vm.retained <- cb.align.vm_trim(sim.low$Ts, sim.low$Xs)
+plot.covars(sim.low$Xs[vm.retained], sim.low$Ts[vm.retained],
+            title="Sample covariate values (after VM)")
+```
+
+Note that the covariate values attained by the two groups are now overlapping; that is, there are no longer covariates in individual groups/batches that are larger/smaller than the largest/smallest attained by the other group/batch.
+
+# $K$-way Matching
+
+Conceptually, $K$-way matching can be thought of as a way to directly include/exclude samples from across the groups/batches until the covariate distributions per group/batch are approximately rendered equal. This is a relatively restrictive approach to aligning covariates across the groups/batches:
+
+```{r, fig.width=5, fig.height=3}
+kway.retained <- cb.align.kway_match(sim.low$Ts, data.frame(Covar=sim.low$Xs),
+                                   match.form="Covar")
+plot.covars(sim.low$Xs[kway.retained], sim.low$Ts[kway.retained],
+            title="Sample covariate values (after K-way matching)")
+```
+
+In this case, we can see that the empirical covariate values retained after $K$-way matching are almost identical across the two groups.
+
+Typically, vector matching will tend to retain more samples for subsequent analysis than k-way matching. This may be undesirable if subsequent inference/estimation techniques are known to be sensitive to unequal empirical covariate distributions.
