@@ -38,7 +38,7 @@ For more details see the help vignette:
 \examples{
 library(causalBatch)
 sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-cb.correct.kway_match(sim$Batch, data.frame(Covar=sim$X), "Covar")
+cb.correct.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 }
 \references{
 Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024).

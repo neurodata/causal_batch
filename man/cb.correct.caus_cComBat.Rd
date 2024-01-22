@@ -29,9 +29,9 @@ cb.correct.caus_cComBat(
 \value{
 a list, containing the following:
 \itemize{
-\item{Y.tilde}{an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.}
-\item{T.tilde}{\code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.}
-\item{X.tilde}{the \code{r} covariates/confounding variables for each of the \code{m} retained samples.}
+\item{Ys.corrected}{an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.}
+\item{Ts}{\code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.}
+\item{Xs}{the \code{r} covariates/confounding variables for each of the \code{m} retained samples.}
 \item{Retained.Ids}{\code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.}
 }
 }
@@ -52,7 +52,7 @@ For more details see the help vignette:
 \examples{
 library(causalBatch)
 sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-cb.correct.caus_cComBat(sim$Y, sim$Batch, data.frame(Covar=sim$X), "Covar")
+cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 
 }
 \references{

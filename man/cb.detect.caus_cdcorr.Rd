@@ -66,7 +66,7 @@ For more details see the help vignette:
 \examples{
 library(causalBatch)
 sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-cb.detect.cdcorr(sim$Y, sim$Batch, sim$X)
+cb.detect.cdcorr(sim$Ys, sim$Ts, sim$Xs)
 
 }
 \references{
