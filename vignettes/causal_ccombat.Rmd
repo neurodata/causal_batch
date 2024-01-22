@@ -79,7 +79,7 @@ cor.sim <- cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), mat
 We can plot the augmented data after causal conditional ComBat has been applied, like so:
 
 ```{r, fig.width=5, fig.height=3}
-plot.sim(cor.sim$Ys.corrected, cor.sim$Ts, cor.sim$Xs$Covar, title="Sigmoidal Simulation (causal ComBat corrected)")
+plot.sim(cor.sim$Ys.corrected, cor.sim$Ts, cor.sim$Xs$Covar, title="Sigmoidal Simulation (causal cComBat corrected)")
 ```
 
 We can see that the augmented data nearly perfectly overlaps across the two groups/batches, which can be confirmed using the causal conditional distance correlation:
