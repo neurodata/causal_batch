@@ -68,7 +68,21 @@ test_that("vector matching with one odd-ball per-group", {
   expect_true(mean(res) > .8)
 })
 
-test_that("high overlap example retains more samples than limited overlap example", {
+test_that("as unbalancedness increases, fewer samples retained", {
   sim.high <- cb.sims.sim_sigmoid(unbalancedness=1)
-  cb.align.vm_trim(sim.high$Ts, sim.high$Xs)
+  retained.high <- cb.align.vm_trim(sim.high$Ts, sim.high$Xs)
+  
+  sim.mod <- cb.sims.sim_sigmoid(unbalancedness=3)
+  retained.mod <- cb.align.vm_trim(sim.mod$Ts, sim.mod$Xs)
+  
+  sim.low <- cb.sims.sim_sigmoid(unbalancedness=5)
+  retained.low <- cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0)
+  
+  rank.lengths <- rank(c(length(retained.high), length(retained.mod), length(retained.low)))
+  expect_true(all(rank.lengths == c(3, 2, 1)))
+})
+
+test_that("throws warning when samples retained is low", {
+  sim.low <- cb.sims.sim_sigmoid(unbalancedness=5)
+  expect_warning(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0.2))
 })
