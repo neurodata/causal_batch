@@ -1,3 +1,5 @@
+require(ks)
+
 test_that("one-hot encoding works with numeric vector", {
   Ts <- c(1, 1, 0, 0)
   Ts.ohe <- as.matrix(ohe(Ts))
@@ -68,7 +70,7 @@ test_that("vector matching with one odd-ball per-group", {
   expect_true(mean(res) > .8)
 })
 
-test_that("as unbalancedness increases, fewer samples retained", {
+test_that("as unbalancedness increases, fewer samples retained by VM", {
   sim.high <- cb.sims.sim_sigmoid(unbalancedness=1)
   retained.high <- cb.align.vm_trim(sim.high$Ts, sim.high$Xs)
   
@@ -85,4 +87,25 @@ test_that("as unbalancedness increases, fewer samples retained", {
 test_that("throws warning when samples retained is low", {
   sim.low <- cb.sims.sim_sigmoid(unbalancedness=5)
   expect_warning(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0.2))
+})
+
+approx.overlap <- function(X1, X2, nbreaks=100) {
+  xbreaks <- seq(from=-1, to=1, length.out=nbreaks)
+  x1.dens <- kde(X1, eval.points=xbreaks)$estimate
+  x2.dens <- kde(X2, eval.points=xbreaks)$estimate
+  
+  sum(pmin(x1.dens/sum(x1.dens), x2.dens/sum(x2.dens)))
+}
+
+test_that("VM increases covariate overlap", {
+  sim.mod <- cb.sims.sim_sigmoid(n=200, unbalancedness = 2)
+  retained.ids <- cb.align.vm_trim(sim.mod$Ts, sim.mod$Xs, retain.ratio = 0.2)
+  
+  Ts.tilde <- sim.mod$Ts[retained.ids]
+  Xs.tilde <- sim.mod$Xs[retained.ids]
+  
+  ov.before <- approx.overlap(sim.mod$Xs[sim.mod$Ts == 0], sim.mod$Xs[sim.mod$Ts == 1])
+  ov.after <- approx.overlap(Xs.tilde[Ts.tilde == 0], Xs.tilde[Ts.tilde == 1])
+  
+  expect_true(ov.before < ov.after)
 })

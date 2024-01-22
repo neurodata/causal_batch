@@ -14,7 +14,7 @@ cb.detect.caus_cdcorr(
   seed = 1,
   num.threads = 1,
   retain.ratio = 0.05,
-  trace = FALSE
+  ddx = FALSE
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise dista
 
 \item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 
-\item{trace}{whether to show convergence messages for multinomial. Defaults to \code{FALSE}.}
+\item{ddx}{whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.}
 }
 \value{
 a list, containing the following:

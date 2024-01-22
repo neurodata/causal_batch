@@ -23,7 +23,7 @@
 #' @param seed a random seed to set. Defaults to \code{1}.
 #' @param num.threads The number of threads for parallel processing (if desired). Defaults to \code{1}.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
-#' @param trace whether to show convergence messages for multinomial. Defaults to \code{FALSE}.
+#' @param ddx whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.
 #' 
 #' @return a list, containing the following:
 #' \item{Test}{The outcome of the statistical test.}
@@ -45,12 +45,12 @@
 #' 
 #' @export
 cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1,
-                                  retain.ratio=0.05, trace=FALSE) {
+                                  retain.ratio=0.05, ddx=FALSE) {
   Xs <- as.data.frame(Xs)
   
   # vector match for propensity trimming, and then reduce sub-sample to the
   # propensity matched subset
-  retain.ids <- cb.align.vm_trim(Ts, Xs, retain.ratio=retain.ratio, trace=trace)
+  retain.ids <- cb.align.vm_trim(Ts, Xs, retain.ratio=retain.ratio, ddx=ddx)
   if (length(retain.ids) == 0) {
     stop("No samples remain after balancing.")
   }
@@ -61,9 +61,15 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
     DY.tilde = dist(Y.tilde, method=dist.method)
   }
   X.tilde <- Xs[retain.ids,,drop=FALSE]
-  X.tilde <- Xs[,apply(X.tilde, 2, var) > 0, drop=FALSE]
   
-  DT.tilde = zero_one_dist(Ts[retain.ids])
+  # remove covariate columns with no variance after discarding imbalanced samples
+  dropped.cols <- apply(X.tilde, 2, var) == 0
+  if (sum(dropped.cols) > 0) {
+    message(sprintf("dropping %d columns...", sum(dropped.cols)))
+  }
+  X.tilde <- X.tilde[, !dropped.cols, drop=FALSE]
+  
+  DT.tilde <- zero_one_dist(Ts[retain.ids])
   
   # run statistical test
   test.out <- cdcov.test(DY.tilde, DT.tilde, X.tilde, num.bootstrap = R,
@@ -86,7 +92,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.
-#' @param trace whether to show convergence messages for multinomial. Defaults to \code{FALSE}.
+#' @param ddx whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.
 #' @return a \code{[m]} vector containing the indices of samples retained after vector matching.
 #' 
 #' @references Michael J. Lopez, et al. "Estimation of Causal Effects with Multiple Treatments" Statistical Science (2017). 
@@ -102,7 +108,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' cb.detect.vm_trim(sim$Batch, sim$X)
 #' 
 #' @export
-cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, trace=FALSE) {
+cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE) {
   Xs = as.data.frame(Xs)
   
   # Fitting the Multinomial Logistic Regression Model
@@ -110,7 +116,7 @@ cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, trace=FALSE) {
   Ts <- as.numeric(factor(Ts, levels=unique(Ts)))
   Ts_unique = unique(Ts)
   
-  m <- multinom(factor(Ts) ~ ., data = as.data.frame(Xs), trace=trace)
+  m <- multinom(factor(Ts) ~ ., data = as.data.frame(Xs), trace=ddx)
   
   # Making predictions using the fitted model
   pred <- predict(m, newdata = as.data.frame(Xs), type = "probs")
