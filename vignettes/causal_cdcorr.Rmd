@@ -22,3 +22,69 @@ require(ggplot2)
 n = 200
 ```
 
+
+To start, we will begin with a simulation example, similar to the ones we were working in for the simulations, which you can access from:
+
+```{r, eval=FALSE}
+vignette("cb.simulations", package="causalBatch")
+```
+
+Let's regenerate our working example data with some plotting code:
+
+```{r}
+# a function for plotting a scatter plot of the data
+plot.sim <- function(Ys, Ts, Xs, title="", 
+                     xlabel="Covariate",
+                     ylabel="Outcome (1st dimension)") {
+  data = data.frame(Y1=Ys[,1], Y2=Ys[,2], 
+                    Group=factor(Ts, levels=c(0, 1), ordered=TRUE), 
+                    Covariates=Xs)
+  
+  data %>%
+    ggplot(aes(x=Covariates, y=Y1, color=Group)) +
+    geom_point() +
+    labs(title=title, x=xlabel, y=ylabel) +
+    scale_x_continuous(limits = c(-1, 1)) +
+    scale_color_manual(values=c(`0`="#bb0000", `1`="#0000bb"), 
+                       name="Group/Batch") +
+    theme_bw()
+}
+```
+
+Next, we will generate a simulation:
+
+```{r}
+sim = cb.sims.sim_sigmoid(n=n, eff_sz=1, unbalancedness=1.5)
+
+plot.sim(sim$Ys, sim$Ts, sim$Xs, title="Sigmoidal Simulation")
+```
+
+Despite the fact that the covariate distributions for each group/batch do not overlap perfectly (note that `unbalancedness` is not $1$), it looks like the two batches still appear to be slightly different. We can test this using the causal conditional distance correlation, like so:
+
+```{r}
+result <- cb.detect.caus_cdcorr(sim$Ys, sim$Ts, sim$Xs, R=100)
+```
+
+Here, we set the number of null replicates `R` to $100$ to make the simulation run faster, but in practice you should typically use at least $1000$ null replicates. To make this faster, we would suggest setting `num.threads` to be close to the maximum number of cores available on your machine. You can identify the number of cores available on your machine using `parallel::detectCores()`.
+
+With the $\alpha$ of the test at $0.05$, we see that the $p$-value is:
+
+```{r}
+print(sprintf("p-value: %.4f", result$Test$p.value))
+```
+
+Since the $p$-value is $< \alpha$, we reject the null hypothesis in favor of the alternative; that is, that the group/batch causes a difference in the outcome variable.
+
+We could optionally have pre-computed a distance matrix for the outcomes, like so:
+
+```{r}
+# compute distance matrix for outcomes
+DY = dist(sim$Ys)
+```
+
+In your use-cases, you could substitute this distance function for any distance function of your choosing, and pass a distance matrix directly to the detection algorithm, by specifying that `distance=TRUE`:
+
+```{r}
+result <- cb.detect.caus_cdcorr(DY, sim$Ts, sim$Xs, distance=TRUE, R=100)
+```
+
