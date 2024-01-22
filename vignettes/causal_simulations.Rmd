@@ -73,7 +73,7 @@ plot.sim.expected <- function(Ys, Ts, Xs, Ytrue, Ttrue, Xtrue, title="",
 
 # Sigmoidal Simulation
 
-In this simulation, we will generate a sigmoidal simulation with $n=200$ samples, where the samples have an equal probability of being from each group/batch.
+In this simulation, we will generate a sigmoidal simulation with $n=200$ samples, where the samples have an equal probability of being from each group/batch. The `n` argument controls the number of samples.
 
 ```{r, fig.width=5, fig.height=3}
 sim = cb.sims.sim_sigmoid(n=n)
