@@ -95,9 +95,13 @@ From an `R` session, type:
 
 ```
 require(devtools)
-install_github('neurodata/causal_batch', build_vignettes=TRUE, force=TRUE)  # install causalBatch with the vignettes
+
+# install causalBatch with the vignettes
+install_github('neurodata/causal_batch', build_vignettes=TRUE, force=TRUE)
+
 require(causalBatch)
-vignette("causal_simulations", package="causalBatch")  # view one of the basic vignettes
+# view one of the basic vignettes
+vignette("causal_simulations", package="causalBatch") 
 ```
 
 The package should take approximately 40 seconds to install with vignettes on a recommended computer. 
