@@ -1,5 +1,7 @@
 #' Sigmoidal Simulation
 #' 
+#' @importFrom stats rbinom
+#' @importFrom stats rnorm
 #' @param n the number of samples. Defaults to \code{100}.
 #' @param pi the balance between the classes, where samples will be from group 1
 #' with probability \code{pi}, and group 2 with probability \code{1 - pi}. Defaults
@@ -43,7 +45,7 @@
 #' \deqn{\epsilon_i \overset{iid}{\sim} Norm(0, \text{err}^2)}
 #' 
 #' For more details see the help vignette:
-#' \code{vignette("cb.simulations", package = "causalBatch")}
+#' \code{vignette("causal_simulations", package = "causalBatch")}
 #' 
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' 
@@ -87,6 +89,8 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 
 #' Linear Simulation
 #' 
+#' @importFrom stats rbinom
+#' @importFrom stats rnorm
 #' @param n the number of samples. Defaults to \code{100}.
 #' @param pi the balance between the classes, where samples will be from group 1
 #' with probability \code{pi}, and group 2 with probability \code{1 - pi}. Defaults
@@ -130,7 +134,7 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' \deqn{\epsilon_i \overset{iid}{\sim} Norm(0, \text{err}^2)}
 #' 
 #' For more details see the help vignette:
-#' \code{vignette("cb.simulations", package = "causalBatch")}
+#' \code{vignette("causal_simulations", package = "causalBatch")}
 #' 
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' 
@@ -169,6 +173,9 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1
 
 #' Impulse Simulation
 #' 
+#' @importFrom stats rbinom
+#' @importFrom stats rnorm
+#' @importFrom stats dnorm
 #' @param n the number of samples. Defaults to \code{100}.
 #' @param pi the balance between the classes, where samples will be from group 1
 #' with probability \code{pi}, and group 2 with probability \code{1 - pi}. Defaults
@@ -218,7 +225,7 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1
 #' \deqn{\epsilon_i \overset{iid}{\sim} Norm(0, \text{err}^2)}
 #' 
 #' For more details see the help vignette:
-#' \code{vignette("cb.simulations", package = "causalBatch")}
+#' \code{vignette("causal_simulations", package = "causalBatch")}
 #' 
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' 
@@ -257,6 +264,9 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 
 #' Impulse Simulation with Asymmetric Covariates
 #' 
+#' @importFrom stats rbinom
+#' @importFrom stats rnorm
+#' @importFrom stats dnorm
 #' @param n the number of samples. Defaults to \code{100}.
 #' @param pi the balance between the classes, where samples will be from group 1
 #' with probability \code{pi}, and group 2 with probability \code{1 - pi}. Defaults
@@ -303,7 +313,7 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' \deqn{\epsilon_i \overset{iid}{\sim} Norm(0, \text{err}^2)}
 #' 
 #' For more details see the help vignette:
-#' \code{vignette("cb.simulations", package = "causalBatch")}
+#' \code{vignette("causal_simulations", package = "causalBatch")}
 #' 
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' 
@@ -316,13 +326,13 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' 
 #' @export
 cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1, 
-                               null=FALSE, a=-.5, b=1/2, c=4, nbreaks=200) {
+                               null=FALSE, a=-.5, b=1/2, c=4, err=1/2, nbreaks=200) {
   batches <- rbinom(n=n, size=1, prob=pi)
   
   beta <- alpha*unbalancedness
   xs <- cb.sims.covar_generator(batches, alpha, alpha, beta, alpha)
   
-  eps <- 1/2*rnorm(n=n, mean=0, sd=1)
+  eps <- err*rnorm(n=n, mean=0, sd=1)
   ys <- dnorm(xs, mean=a, sd=b)*c + eps
   
   xtrue_tmp <- seq(from=-1, to=1, length.out=nbreaks)
@@ -341,6 +351,8 @@ cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalanc
 }
 
 #' Compute overlap of two beta distributions
+#'
+#' @importFrom stats dbeta
 #' @param a1 alpha of the first covariate distribution.
 #' @param b1 beta of the first covariate distribution.
 #' @param a2 alpha of the second covariate distribution.
@@ -366,6 +378,8 @@ sigmoid <- function(x) {
 }
 
 #' Covariate generator function
+#'
+#' @importFrom stats rbeta 
 #' @param batches an \code{n} vector, consisting of the batch labels for each of the \code{n} samples.
 #' @param a1 alpha of the first covariate distribution.
 #' @param b1 beta of the first covariate distribution.

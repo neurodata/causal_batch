@@ -71,13 +71,13 @@ test_that("vector matching with one odd-ball per-group", {
 })
 
 test_that("as unbalancedness increases, fewer samples retained by VM", {
-  sim.high <- cb.sims.sim_sigmoid(unbalancedness=1)
+  sim.high <- cb.sims.sim_sigmoid(n=300, unbalancedness=1)
   retained.high <- cb.align.vm_trim(sim.high$Ts, sim.high$Xs)
   
-  sim.mod <- cb.sims.sim_sigmoid(unbalancedness=3)
+  sim.mod <- cb.sims.sim_sigmoid(n=300, unbalancedness=2.5)
   retained.mod <- cb.align.vm_trim(sim.mod$Ts, sim.mod$Xs)
   
-  sim.low <- cb.sims.sim_sigmoid(unbalancedness=5)
+  sim.low <- cb.sims.sim_sigmoid(n=300, unbalancedness=4)
   retained.low <- cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0)
   
   rank.lengths <- rank(c(length(retained.high), length(retained.mod), length(retained.low)))
@@ -85,8 +85,8 @@ test_that("as unbalancedness increases, fewer samples retained by VM", {
 })
 
 test_that("VM throws warning when samples retained is low", {
-  sim.low <- cb.sims.sim_sigmoid(unbalancedness=5)
-  expect_warning(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0.2))
+  sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness=3)
+  expect_warning(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0.7))
 })
 
 test_that("VM throws error when no samples retained", {

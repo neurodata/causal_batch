@@ -19,6 +19,7 @@ knitr::opts_chunk$set(
 ```{r, message=FALSE}
 require(causalBatch)
 require(ggplot2)
+require(tidyr)
 n = 300
 ```
 

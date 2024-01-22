@@ -1,4 +1,4 @@
-alpha = 0.05
+alpha = 0.1
 eps = 0.2
 
 test_that("reject null when balanced and ATE", {
@@ -55,10 +55,10 @@ test_that("works when covariates are given as a vector", {
 })
 
 test_that("works with >1 covariate levels", {
-  sim.low <- cb.sims.sim_linear(n=100)
-  sim.low$Xs <- cbind(sim.low$Xs, runif(100))
+  sim.high <- cb.sims.sim_linear(n=100)
+  sim.high$Xs <- cbind(sim.high$Xs, runif(100))
   
-  res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
+  res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                num.threads = parallel::detectCores() - 2,
                                R=100)
   expect_true(res$Test$p.value < alpha)

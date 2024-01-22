@@ -76,7 +76,7 @@ Finally, the error terms are:
 \deqn{\epsilon_i \overset{iid}{\sim} Norm(0, \text{err}^2)}
 
 For more details see the help vignette:
-\code{vignette("cb.simulations", package = "causalBatch")}
+\code{vignette("causal_simulations", package = "causalBatch")}
 }
 
 \examples{

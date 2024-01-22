@@ -3,8 +3,8 @@ Type: Package
 Title: Causal Batch Effects
 Version: 1.0
 Date: 2024-01-21
-Author: Eric Bridgeford
-Maintainer: Eric Bridgeford <ericwb95@gmail.com>
+Author: Eric W. Bridgeford
+Maintainer: Eric W. Bridgeford <ericwb95@gmail.com>
 Description: A package for using causal techniques to detect and correct for batch effects in high-dimensional scientific data sets. Also provides a number of useful utilities for generating simulations and balancing covariates across multiple groups/batches of data.
 Depends:
   R (>= 4.2.0)
@@ -14,7 +14,8 @@ Imports:
   sva,
   MatchIt,
   nnet,
-  dplyr
+  dplyr,
+  magrittr
 URL:
   https://github.com/neurodata/causal_batch
 Encoding: UTF-8
@@ -27,7 +28,8 @@ Suggests:
     testthat (>= 3.0.0),
     covr,
     roxygen2,
-    kdensity
-License: MIT
+    ks,
+    ggplot2
+License: MIT + file LICENSE
 RoxygenNote: 7.3.0
 Config/testthat/edition: 3

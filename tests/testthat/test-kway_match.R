@@ -1,3 +1,5 @@
+require(ks)
+
 test_that("k-way matching with one odd-ball per-group", {
   nrep <- 100
   

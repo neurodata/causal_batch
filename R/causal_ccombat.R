@@ -8,6 +8,8 @@
 #' under which conclusions derived are causal.
 #' 
 #' @importFrom sva ComBat
+#' @importFrom stats model.matrix
+#' @importFrom stats as.formula
 #' @param Ys an \code{[n, d]} matrix, for the outcome variables with \code{n} samples in \code{d} dimensions.
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
@@ -29,11 +31,11 @@
 #' 
 #' @section Details:
 #' For more details see the help vignette:
-#' \code{vignette("cb.correct.caus_cComBat", package = "causalBatch")}
+#' \code{vignette("causal_ccombat", package = "causalBatch")}
 #' 
 #' @examples
 #' library(causalBatch)
-#' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 #' cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
@@ -54,6 +56,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' 
 #' A function for performing k-way matching using the matchIt package. Looks for samples which have corresponding matches across all other treatment levels.
 #' 
+#' @importFrom magrittr %>%
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
@@ -63,7 +66,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' 
 #' @section Details:
 #' For more details see the help vignette:
-#' \code{vignette("cb.balancing", package = "causalBatch")}
+#' \code{vignette("causal_balancing", package = "causalBatch")}
 #' @author Eric W. Bridgeford
 #' 
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
@@ -71,7 +74,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' 
 #' @examples
 #' library(causalBatch)
-#' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 #' cb.correct.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' @export
 cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
@@ -110,8 +113,12 @@ cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="near
 }
 
 #' Pairwise covariate matching
+#' 
+#' 
+#' @importFrom magrittr %>%
 #' @importFrom dplyr mutate
 #' @importFrom MatchIt matchit
+#' @importFrom stats formula
 #' @param covar.tx the treatment covariate/label matrix.
 #' @param covar.cont the control covariate/label matrix.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.

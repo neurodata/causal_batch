@@ -29,12 +29,12 @@ and that the system satisfies the strong ignorability condiiton to derive causal
 \section{Details}{
 
 For more details see the help vignette:
-\code{vignette("cb.balancing", package = "causalBatch")}
+\code{vignette("causal_balancing", package = "causalBatch")}
 }
 
 \examples{
 library(causalBatch)
-sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 cb.detect.vm_trim(sim$Ts, sim$Xs)
 
 }

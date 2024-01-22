@@ -8,6 +8,9 @@
 #' under which conclusions derived are causal.
 #' 
 #' @importFrom cdcsis cdcov.test
+#' @importFrom stats as.dist
+#' @importFrom stats dist
+#' @importFrom stats var
 #' @param Ys Either:
 #' \itemize{
 #' \item{\code{[n, d]} matrix, the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.}
@@ -34,13 +37,13 @@
 #' 
 #' @section Details:
 #' For more details see the help vignette:
-#' \code{vignette("cb.detect.caus_cdcorr", package = "causalBatch")}
+#' \code{vignette("causal_cdcorr", package = "causalBatch")}
 #' 
 #' @author Eric W. Bridgeford
 #' 
 #' @examples
 #' library(causalBatch)
-#' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 #' cb.detect.cdcorr(sim$Ys, sim$Ts, sim$Xs)
 #' 
 #' @export
@@ -88,6 +91,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' and that the system satisfies the strong ignorability condiiton to derive causal conclusions.
 #' 
 #' @importFrom nnet multinom
+#' @importFrom stats predict
 #' 
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
@@ -100,11 +104,11 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' @author Eric W. Bridgeford
 #' @section Details:
 #' For more details see the help vignette:
-#' \code{vignette("cb.balancing", package = "causalBatch")}
+#' \code{vignette("causal_balancing", package = "causalBatch")}
 #' 
 #' @examples
 #' library(causalBatch)
-#' sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 #' cb.detect.vm_trim(sim$Ts, sim$Xs)
 #' 
 #' @export
@@ -164,6 +168,8 @@ cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE) {
 }
 
 #' A utility to one-hot encode a treatment vector.
+#' 
+#' @importFrom stats model.matrix
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @return \code{[n, K]} a one-hot encoding of \code{Ts}.
 #' @author Eric W. Bridgeford
@@ -180,6 +186,8 @@ ohe <- function(Ts) {
 }
 
 #' A utility to compute the zero-one distances for a treatment vector.
+#' 
+#' @importFrom stats dist
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @return \code{[n, n]} the pairwise zero-one distance matrix.
 #' @author Eric W. Bridgeford

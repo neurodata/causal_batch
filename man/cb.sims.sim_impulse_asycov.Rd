@@ -14,6 +14,7 @@ cb.sims.sim_impulse_asycov(
   a = -0.5,
   b = 1/2,
   c = 4,
+  err = 1/2,
   nbreaks = 200
 )
 }
@@ -39,10 +40,10 @@ for each of the groups. Defaults to \code{1}.}
 
 \item{c}{the third parameter for the covariate/outcome relationship. Defaults to \code{1}.}
 
+\item{err}{the level of noise for the simulation. Defaults to \code{1/2}.}
+
 \item{nbreaks}{the number of breakpoints for computing the expected outcome at a given covariate level
 for each batch. Defaults to \code{200}.}
-
-\item{err}{the level of noise for the simulation. Defaults to \code{1/2}.}
 }
 \value{
 a list, containing the following:
@@ -80,7 +81,7 @@ Finally, the error terms are:
 \deqn{\epsilon_i \overset{iid}{\sim} Norm(0, \text{err}^2)}
 
 For more details see the help vignette:
-\code{vignette("cb.simulations", package = "causalBatch")}
+\code{vignette("causal_simulations", package = "causalBatch")}
 }
 
 \examples{

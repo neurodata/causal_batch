@@ -32,12 +32,12 @@ A function for performing k-way matching using the matchIt package. Looks for sa
 \section{Details}{
 
 For more details see the help vignette:
-\code{vignette("cb.balancing", package = "causalBatch")}
+\code{vignette("causal_balancing", package = "causalBatch")}
 }
 
 \examples{
 library(causalBatch)
-sim <- cb.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
 cb.correct.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 }
 \references{
