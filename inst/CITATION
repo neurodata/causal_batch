@@ -1,4 +1,16 @@
 bibentry(
+  bibtype  = "Manual",
+  title    = "(causalBatch): Causal Batch Effects",
+  author   = c(as.person("Eric W. Bridgeford"),
+               as.person("Michael Powell"),
+               as.person("Gregory Kiar"),
+               as.person("Brian Caffo"),
+               as.person("Joshua T. Vogelstein")),
+  note     = "R-package version 1.0",
+  year     = "2024",
+  key      = "cb-package"
+)
+bibentry(
   bibtype  = "Article",
   title    = "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?",
   author   = c(as.person("Eric W. Bridgeford"),
@@ -13,7 +25,26 @@ bibentry(
                as.person("Brian Caffo"),
                as.person("Joshua T. Vogelstein")),
   journal  = "bioRxiv",
-  year     = "2023",
+  year     = "2024",
   pages    = "2021.09.03.458920",
-  doi      = "10.1101/2021.09.03.458920"
+  doi      = "10.1101/2021.09.03.458920",
+  key      = "caus_ccombat-paper"
+)
+bibentry(
+  bibtype  = "Article",
+  title    = "Learning sources of variability from high-dimensional observational studies",
+  author   = c(as.person("Eric W. Bridgeford"),
+               as.person("Jaewon Chung"),
+               as.person("Brian Gilbert"),
+               as.person("Sambit Panda"),
+               as.person("Adam Li"),
+               as.person("Sambit Panda"),
+               as.person("Cencheng Shen"),
+               as.person("Alexandra Badea"),
+               as.person("Brian Caffo"),
+               as.person("Joshua T. Vogelstein")),
+  journal  = "arXiv",
+  year     = "2023",
+  doi      = "10.48550/arXiv.2307.13868",
+  key      = "caus_cdcorr-paper"
 )

@@ -31,7 +31,7 @@ test_that("as unbalancedness increases, fewer samples retained by k-way matching
   retained.mod <- cb.align.kway_match(sim.mod$Ts, data.frame(Covar=sim.mod$Xs),
                                       match.form="Covar")
   
-  sim.low <- cb.sims.sim_sigmoid(unbalancedness=3)
+  sim.low <- cb.sims.sim_sigmoid(unbalancedness=2.5)
   retained.low <- cb.align.kway_match(sim.low$Ts, data.frame(Covar=sim.low$Xs),
                                       match.form="Covar", retain.ratio=0)
   
