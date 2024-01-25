@@ -5,7 +5,9 @@ require(parallel)
 require(causalBatch)
 require(cdcsis)
 require(energy)
-source(".cond_alg_helpers.R")
+require(parallelDist)
+require(igraph)
+source("cond_alg_helpers.R")
 
 select <- dplyr::select
 in.path <- '/data/'
@@ -116,16 +118,16 @@ fns <- list("Adjusted (Causal)"=cb.detect.caus_cdcorr, "Conditional (Non-Causal)
 
 covars.tbl <- cov.dat %>% ungroup() %>% mutate(id=row_number())
 
-Dmtx.norm <- as.matrix(parDist(gr.dat, threads=ncores))
+Dmtx.dat <- as.matrix(parDist(gr.dat, threads=ncores))
 
-dset.pairs <- combn(datasets)
+dset.pairs <- combn(datasets, 2)
 output <- do.call(rbind, mclapply(1:dim(dset.pairs)[2], function(i) {
   tryCatch({
     dset.1 <- dset.pairs[1,x]
     dset.2 <- dset.pairs[2,x]
     print(sprintf("%d: %s, %s", x, dset.1, dset.2))
-    n.1 <- sum(cov.dat$Dataset == dset.1)
-    n.2 <- sum(cov.dat$Dataset == dset.2)
+    n.1 <- sum(covars.tbl$Dataset == dset.1)
+    n.2 <- sum(covars.tbl$Dataset == dset.2)
     if (n.1 < n.2) {
       dset.i <- dset.1; dset.j <- dset.2
       n.i <- n.1; n.j <- n.2
@@ -134,7 +136,7 @@ output <- do.call(rbind, mclapply(1:dim(dset.pairs)[2], function(i) {
       n.i <- n.2; n.j <- n.1
     }
     
-    cov.dat.ij <- cov.dat %>%
+    cov.dat.ij <- covars.tbl %>%
       filter(Dataset %in% c(dset.i, dset.j)) %>%
       mutate(Treatment = as.numeric(Dataset == dset.i))
     Dmtx.dat.ij <- Dmtx.dat[cov.dat.ij$id, cov.dat.ij$id]
@@ -160,26 +162,27 @@ output <- do.call(rbind, mclapply(1:dim(dset.pairs)[2], function(i) {
       tryCatch({
         test.out <- do.call(fns[[fn.name]], list(as.dist(Dmtx.dat.ij), cov.dat.ij$Treatment, z, R=R, distance=TRUE))
         return(data.frame(Data="Raw", Method=fn.name, Dataset.Trt=dset.i,
-                   Dataset.Ctrl=dset.j, Effect=test.out$statistic,
-                   p.value=test.out$p.value, Overlap=ov.ij))
-      }, function(e) {
+                   Dataset.Ctrl=dset.j, Effect=test.out$Test$statistic,
+                   p.value=test.out$Test$p.value, Overlap=ov.ij))
+      }, error=function(e) {
         return(data.frame(Data="Raw", Method=fn.name, Dataset.Trt=dset.i,
                    Dataset.Ctrl=dset.j, Effect=NA,
                    p.value=NA, Overlap=ov.ij))
       })
     })
+    names(result) <- names(fns)
     
     # If both datasets are NKI, Uncorrected == Causal Crossover
     if (grepl("NKI24", dset.i) & grepl("NKI24", dset.j)) {
-      result$causal <- result$uncor
+      result$causal <- result[["Associational"]]
       result$causal$Data <- "Crossover"
     } else {
-      result$causal <- data.frame(Data="Raw", Method="Crossover", Dataset.Trt=dset.i,
+      result[["Crossover"]] <- data.frame(Data="Raw", Method="Crossover", Dataset.Trt=dset.i,
                                   Dataset.Ctrl=dset.j, Effect=NA, p.value=NA,
                                   Overlap=ov.ij)
     }
     
-    return(rbind(result))
+    return(do.call(rbind, c(result)))
   })
 }, mc.cores=ncores))
 
