@@ -4,3 +4,5 @@ citation.bib
 README.md
 LICENSE.md
 ^LICENSE\.md$
+^docs$
+Dockerfile

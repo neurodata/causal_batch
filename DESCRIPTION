@@ -4,14 +4,14 @@ Title: Causal Batch Effects
 Version: 1.0
 Date: 2024-01-21
 Authors@R: 
-  c(person(given="Eric", family="Bridgeford", role=c("aut", "cre"),
+  c(person(given="Eric W.", family="Bridgeford", role=c("aut", "cre"),
     email="ericwb95@gmail.com"),
     person(given="Michael", family="Powell", role="ctb"),
     person(given="Brian", family="Caffo", role="ctb"),
-    person(given="Joshua", family="Vogelstein", role="ctb")
+    person(given="Joshua T.", family="Vogelstein", role="ctb")
   )
 Maintainer: Eric W. Bridgeford <ericwb95@gmail.com>
-Description: Software for using causal techniques to detect and correct for group/batch effects in high-dimensional scientific data sets, as-described in our manuscripts Bridgeford et al. (2024) <doi:10.1101/2021.09.03.458920> and Bridgeford et al. (2023) <arxiv:2307.13868>. Also provides a number of useful utilities for generating simulations and balancing covariates across multiple groups/batches of data.
+Description: Software for using causal techniques to detect and correct for group/batch effects in high-dimensional scientific data sets, as-described in our manuscripts Bridgeford et al. (2024) <doi:10.1101/2021.09.03.458920> and Bridgeford et al. (2023) <arXiv:2307.13868>. Also provides a number of useful utilities for generating simulations and balancing covariates across multiple groups/batches of data.
 Depends:
   R (>= 4.2.0)
 biocViews:

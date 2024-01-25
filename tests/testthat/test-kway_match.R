@@ -23,15 +23,15 @@ test_that("k-way matching with one odd-ball per-group", {
 })
 
 test_that("as unbalancedness increases, fewer samples retained by k-way matching", {
-  sim.high <- cb.sims.sim_sigmoid(unbalancedness=1)
+  sim.high <- cb.sims.sim_sigmoid(n=200, unbalancedness=1)
   retained.high <- cb.align.kway_match(sim.high$Ts, data.frame(Covar=sim.high$Xs),
                                        match.form="Covar")
   
-  sim.mod <- cb.sims.sim_sigmoid(unbalancedness=1.5)
+  sim.mod <- cb.sims.sim_sigmoid(n=200, unbalancedness=1.5)
   retained.mod <- cb.align.kway_match(sim.mod$Ts, data.frame(Covar=sim.mod$Xs),
                                       match.form="Covar")
   
-  sim.low <- cb.sims.sim_sigmoid(unbalancedness=2.5)
+  sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness=2.5)
   retained.low <- cb.align.kway_match(sim.low$Ts, data.frame(Covar=sim.low$Xs),
                                       match.form="Covar", retain.ratio=0)
   
@@ -41,7 +41,7 @@ test_that("as unbalancedness increases, fewer samples retained by k-way matching
 
 
 test_that("K-way matching throws warning when samples retained is low", {
-  sim.low <- cb.sims.sim_sigmoid(unbalancedness=1.5)
+  sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness=2)
   expect_warning(cb.align.kway_match(sim.low$Ts, data.frame(Covar=sim.low$Xs),
                                      match.form="Covar", retain.ratio = 0.7))
 })
