@@ -16,7 +16,7 @@ cond.dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = F
   return(list(Test=test.out))
 }
 
-dcorr <- functionfunction(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1) {
+dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1) {
   Xs <- as.data.frame(Xs)
   
   if (isTRUE(distance)) {

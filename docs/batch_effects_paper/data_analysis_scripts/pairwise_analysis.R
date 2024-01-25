@@ -1,9 +1,11 @@
+# docker run -ti --entrypoint /bin/bash -v /cis/project/ndmg/batch_effects/:/data -v /cis/home/ebridge2/Documents/research/graphstats_repos/causal_batch/:/base neurodata/causal_batch:0.0.1
+# docker run -ti --entrypoint /bin/bash -v /mnt/nfs2/batch_effects/:/data -v /home/eric/Documents/research/graphstats-repos/causal_batch/:/base neurodata/causal_batch:0.0.1
 require(tidyverse)
 require(parallel)
 require(causalBatch)
 require(cdcsis)
 require(energy)
-source("./cdcorr_combat_helpers.R")
+source(".cond_alg_helpers.R")
 
 select <- dplyr::select
 in.path <- '/data/'
