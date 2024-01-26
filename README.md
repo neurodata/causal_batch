@@ -2,6 +2,7 @@
 
 [![arXiv shield](https://img.shields.io/badge/arXiv-2307.13868-red.svg?style=flat)](https://arxiv.org/abs/2307.13868)
 [![biorxiv shield](https://img.shields.io/badge/bioRxiv-2021.09.03.458920-blue.svg?style=flat)](https://www.biorxiv.org/content/10.1101/2021.09.03.458920v6)
+[![](https://cranlogs.r-pkg.org/badges/causalBatch)](https://cran.rstudio.com/web/packages/causalBatch/index.html)
 
 ## Contents
 
