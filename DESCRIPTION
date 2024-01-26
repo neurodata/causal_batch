@@ -11,7 +11,7 @@ Authors@R:
     person(given="Joshua T.", family="Vogelstein", role="ctb")
   )
 Maintainer: Eric W. Bridgeford <ericwb95@gmail.com>
-Description: Software for using causal techniques to detect and correct for group/batch effects in high-dimensional scientific data sets, as-described in our manuscripts Bridgeford et al. (2024) <doi:10.1101/2021.09.03.458920> and Bridgeford et al. (2023) <arXiv:2307.13868>. Also provides a number of useful utilities for generating simulations and balancing covariates across multiple groups/batches of data.
+Description: Software which provides numerous functionalities for detecting and removing group-level effects from high-dimensional scientific data which, when combined with additional assumptions, allow for causal conclusions, as-described in our manuscripts Bridgeford et al. (2024) <doi:10.1101/2021.09.03.458920> and Bridgeford et al. (2023) <arXiv:2307.13868>. Also provides a number of useful utilities for generating simulations and balancing covariates across multiple groups/batches of data via matching and propensity trimming for more than two groups.
 Depends:
   R (>= 4.2.0)
 biocViews:
