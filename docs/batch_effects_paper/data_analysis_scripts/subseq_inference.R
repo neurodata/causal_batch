@@ -8,7 +8,7 @@ require(energy)
 require(parallelDist)
 require(igraph)
 require(gcm)
-source("cond_alg_helpers.R")
+source("../utilities/cond_alg_helpers.R")
 
 select <- dplyr::select
 in.path <- '/data/'
@@ -135,20 +135,20 @@ cohorts=list("All"=datasets,
 # AAL parcellation has 116 vertices
 nv <- 116
 
-preproc.dat <- lapply(cohorts, function(crt) {
-  lapply(names(fns), function(fn.name) {
+preproc.dat <- lapply(names(cohorts), function(crt) {
+  result <- lapply(names(fns), function(fn.name) {
     tryCatch({
       subs.in.crt <- (covars.tbl %>%
-                        select(Dataset %in% cohorts[[crt]]))$id
-      Ys.crt <- gr.dat[subs.in.crt,]; Ts.crt <- covars.tbl[subs.in.crt]$Dataset
-      Xs.crt <- covars.tbl[subs.in.crt,] %>% select(Age, Sex, Continent)
+                        filter(Dataset %in% cohorts[[crt]]))$id
+      Ys.crt <- gr.dat[subs.in.crt,]; Ts.crt <- covars.tbl$Dataset[subs.in.crt]
+      Xs.crt <- covars.tbl[subs.in.crt,] %>% select(Age, Sex, Continent) %>% mutate(Sex=factor(Sex))
       
       # if american clique, continent will be a redundant variable and cause an error
       # since it has only 1 level making the model matrix
       if (crt == "American Clique") {
-        match.form <- "~Age + Sex"; exact="Sex"
+        match.form <- "Age + Sex"
       } else {
-        match.form <- "~Age + Sex + Continent"; exact=as.formula("~Sex + Continent")
+        match.form <- "Age + Sex + Continent"; exact=as.formula("~Sex + Continent")
       }
       
       # "correct" batch effect
@@ -156,13 +156,16 @@ preproc.dat <- lapply(cohorts, function(crt) {
                                               match.args=list(method="nearest", exact=exact, 
                                                               replace=FALSE, caliper=.1)))
       
-      return(list(Ys=cor.dat$Ys.corrected, Ts=cor.dat$Ts, Xs=cor.dat$Xs))
-      
+      list(Ys=cor.dat$Ys.corrected, Ts=cor.dat$Ts, Xs=cor.dat$Xs)
     }, error=function(e) {
-      return(NULL)
+      NULL
     })
   })
+  names(result) <- names(fns)
+  result
 })
+
+saveRDS(preproc.dat, "../data/corrected_data.rds")
 
 output <- do.call(rbind, lapply(cohorts, function(crt) {
   do.call(rbind, lapply(names(fns), function(fn.name) {
@@ -187,4 +190,4 @@ output <- do.call(rbind, lapply(cohorts, function(crt) {
   }))
 }))
 
-saveRDS(output, "../data/pairwise.rds")
+saveRDS(output, "../data/subseq.rds")
