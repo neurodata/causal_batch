@@ -57,7 +57,11 @@ Before setting up the `causalBatch` package, users should have `R` version 4.2.0
 
 ## Stable Release
 
+The stable release of the package is available on CRAN, and can be installed from `R` as:
 
+```
+install.packages('causalBatch')
+```
 
 ## Development Version
 
