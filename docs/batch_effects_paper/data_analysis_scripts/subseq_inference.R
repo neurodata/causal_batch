@@ -164,30 +164,40 @@ preproc.dat <- lapply(names(cohorts), function(crt) {
   names(result) <- names(fns)
   result
 })
+names(preproc.dat) <- names(cohorts)
 
 saveRDS(preproc.dat, "../data/corrected_data.rds")
 
-output <- do.call(rbind, lapply(cohorts, function(crt) {
-  do.call(rbind, lapply(names(fns), function(fn.name) {
+preproc.dat <- readRDS("../data/corrected_data.rds")
+output <- lapply(names(cohorts), function(crt) {
+  result <- lapply(names(fns), function(fn.name) {
+    cor.dat <- preproc.dat[[crt]][[fn.name]]
     # test whether evidence to reject that edge and sex | age are independent
-    X.sex <- Xs.crt$Sex; X.age <- Xs.crt$Age
-    d <- 5 # dim(Ys.cor)[2]
+    X.sex <- cor.dat$Xs$Sex; X.age <- cor.dat$Xs$Age
+    d <- 116^2
     test = do.call(rbind, mclapply(1:d, function(i) {
       i.coord <- pos2coord(i, dim.mat=c(nv, nv))
-      # check if coordinate in upper triangle
-      if (i.coord[1] > i.coord[2]) {
-        X.age <- X.age[, apply(X.age, 2, var) > 0, drop=FALSE]
-        test <- gcm(Ys[,i,drop=FALSE], as.matrix(causalBatch:::ohe(X.sex)), X.age, R=R, regr.method="gam")
-        if(i %% 100 == 0) {
-          print(i)
+      tryCatch({
+        # check if coordinate in upper triangle
+        if (i.coord[1] > i.coord[2]) {
+          test <- gcm(cor.dat$Ys[,i,drop=FALSE], as.matrix(causalBatch:::ohe(X.sex)), matrix(X.age, ncol=1), R=R, regr.method="xgboost")
+          if(i %% 100 == 0) {
+            print(i)
+          }
+          data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=test$statistic,
+                     p.value=test$p.value, Cohort=crt, Method=fn.name)
+        } else {
+          NULL
         }
-        return(data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=test$statistic,
-                          p.value=test$p.value, Cohort=crt, Method=fn.name))
-      } else {
-        return(NULL)
-      }
+      }, error=function(e) {
+        data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=NA,
+                   p.value=NA, Cohort=crt, Method=fn.name)
+      })
     }, mc.cores = ncores - 1))
-  }))
-}))
+  })
+  names(result) <- names(fns)
+  do.call(rbind, result)
+})
+output.subseq <- do.call(rbind, output)
 
-saveRDS(output, "../data/subseq.rds")
+saveRDS(outputs.subseq, "../data/subseq.rds")

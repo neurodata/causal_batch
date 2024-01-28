@@ -2,6 +2,7 @@ require(energy)
 require(cdcsis)
 require(causalBatch)
 require(sva)
+require(GeneralisedCovarianceMeasure)
 
 # Conditional distance correlation from Wang et al., 2015
 cond.dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1) {
