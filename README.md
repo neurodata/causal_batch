@@ -11,7 +11,7 @@
 - [System Requirements](#system-requirements)
 - [Installation Guide](#installation-guide)
 - [Demo](#demo)
-- [Results](#results)
+- [Results and figure reproduction](#results-and-figure-reproduction)
 - [License](./LICENSE)
 - [Issues](https://github.com/ebridge2/causalBatch/issues)
 - [Citation](#citation)
@@ -122,7 +122,7 @@ vignette("causal_cdcorr", package="causalBatch")
 vignette("causal_ccombat", package="causalBatch")
 ```
 
-# Results
+# Results and figure reproduction
 
 See [Batch Effects Paper](https://github.com/neurodata/causal_batch/tree/main/docs/batch_effects_paper) for instructions to reproduce figures from Bridgeford et al. (2024). 
 
