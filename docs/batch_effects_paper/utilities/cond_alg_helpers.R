@@ -39,16 +39,16 @@ dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE,
 cond.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
   mod <- model.matrix(as.formula("~Sex + Age"), data=Xs)
   Ys.cor <- t(ComBat(t(Ys), Ts, mod=mod))
-  return(Ys.cor)
+  return(list(Ys.corrected=Ys.cor, Ts=Ts, Xs=Xs))
 }
 
 assoc.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
   Ys.cor <- t(ComBat(t(Ys), Ts))
-  return(Ys.cor)
+  return(list(Ys.corrected=Ys.cor, Ts=Ts, Xs=Xs))
 }
 
 raw.preproc <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
-  return(Ys)
+  return(list(Ys.corrected=Ys, Ts=Ts, Xs=Xs))
 }
 
 

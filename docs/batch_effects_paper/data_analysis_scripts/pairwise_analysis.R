@@ -7,7 +7,7 @@ require(cdcsis)
 require(energy)
 require(parallelDist)
 require(igraph)
-source("cond_alg_helpers.R")
+source("../utilities/cond_alg_helpers.R")
 
 select <- dplyr::select
 in.path <- '/data/'
@@ -121,7 +121,7 @@ covars.tbl <- cov.dat %>% ungroup() %>% mutate(id=row_number())
 Dmtx.dat <- as.matrix(parDist(gr.dat, threads=ncores))
 
 dset.pairs <- combn(datasets, 2)
-output <- mclapply(1:dim(dset.pairs)[2], function(x) {
+output <- lapply(1:dim(dset.pairs)[2], function(x) {
   dset.1 <- dset.pairs[1,x]
   dset.2 <- dset.pairs[2,x]
   print(sprintf("%d: %s, %s", x, dset.1, dset.2))
@@ -160,7 +160,7 @@ output <- mclapply(1:dim(dset.pairs)[2], function(x) {
     
     result <- lapply(names(fns), function(fn.name) {
       tryCatch({
-        test.out <- do.call(fns[[fn.name]], list(as.dist(Dmtx.dat.ij), cov.dat.ij$Treatment, z, R=R, distance=TRUE))
+        test.out <- do.call(fns[[fn.name]], list(as.dist(Dmtx.dat.ij), cov.dat.ij$Treatment, z, R=R, distance=TRUE, num.threads=ncores))
         return(data.frame(Data="Raw", Method=fn.name, Dataset.Trt=dset.i,
                    Dataset.Ctrl=dset.j, Effect=test.out$Test$statistic,
                    p.value=test.out$Test$p.value, Overlap=ov.ij))
@@ -175,7 +175,7 @@ output <- mclapply(1:dim(dset.pairs)[2], function(x) {
     # If both datasets are NKI, Uncorrected == Causal Crossover
     if (grepl("NKI24", dset.i) & grepl("NKI24", dset.j)) {
       result$causal <- result[["Associational"]]
-      result$causal$Data <- "Crossover"
+      result$causal$Method <- "Crossover"
     } else {
       result[["Crossover"]] <- data.frame(Data="Raw", Method="Crossover", Dataset.Trt=dset.i,
                                   Dataset.Ctrl=dset.j, Effect=NA, p.value=NA,
@@ -188,6 +188,6 @@ output <- mclapply(1:dim(dset.pairs)[2], function(x) {
                       Dataset.Ctrl=dset.j, Effect=NA, p.value=NA,
                       Overlap=ov.ij)
   })
-}, mc.cores=ncores)
+})
 
 saveRDS(do.call(rbind, output), "../data/pairwise.rds")

@@ -1,0 +1,162 @@
+---
+title: "Figure 0 Sims V2"
+output: html_document
+date: "2023-10-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setup, include=FALSE}
+require(causalBatch)
+require(tidyverse)
+require(parallel)
+require(dplyr)
+source("../utilities/combat_gam.R")
+source("../utilities/combat_return.R")
+source("../utilities/sim_helpers.R")
+batch.cols <- c("0"="#d95f02", "1"="#7570b3")
+```
+
+```{r}
+n = 500
+overlap.settings <- list(#"I. Low Overlap"=list(n=n, unbalancedness=8, a=-1, b=8, err=1/8, eff_sz=0.5),
+                         "II. Moderate Overlap, Overcorrection"=list(n=n, unbalancedness=3, eff_sz=0.5,
+                                                     a=-1, b=8, err=1/8),
+                         "II. Moderate Overlap, Undercorrection"=list(n=n, unbalancedness=3, eff_sz=-0.5,
+                                                     a=-1, b=8, err=1/8))
+sig.sims <- gen.simulations(cb.sims.sim_sigmoid, overlap.settings)
+
+sig.true_list <- get.true_signal(sig.sims)
+sig.true_df <- get.true_signal_df(sig.true_list)
+
+ccombat.fit <- fit.cComBat(sig.sims)
+caus_combat.fit <- fit.caus_cComBat(sig.sims)
+ccombat.applied <- apply.cComBat(sig.sims, ccombat.fit)
+caus_combat.applied <- apply.cComBat(sig.sims, caus_combat.fit)
+
+sig.cc_true_adj <- apply.cComBat(sig.true_list, ccombat.fit)
+sig.caus.cc_true_adj <- apply.cComBat(sig.true_list, caus_combat.fit)
+```
+
+```{r}
+raw.dat <- do.call(rbind, lapply(names(sig.sims), function(x) {
+  dat = sig.sims[[x]]
+  return(data.frame(X=dat$Xs, Batch=dat$Ts, Y=dat$Ys[,1], Setting=x, Overlap=dat$Overlap, Signal="Raw"))
+}))
+points <- do.call(rbind, list(raw.dat %>% mutate(Algorithm="Raw"),
+                    ccombat.applied %>% mutate(Algorithm="cComBat"),
+                    caus_combat.applied %>% mutate(Algorithm="Causal cComBat"))) %>%
+  mutate(Algorithm=factor(Algorithm, levels=c("Raw", "cComBat", "Causal cComBat"), ordered=TRUE))
+
+lines <- do.call(rbind, list(
+  sig.true_df %>% mutate(Algorithm="Raw"),
+  sig.cc_true_adj %>% mutate(Algorithm="cComBat"),
+  sig.caus.cc_true_adj %>% mutate(Algorithm="Causal cComBat")
+)) %>%
+  mutate(Algorithm=factor(Algorithm, levels=c("Raw", "cComBat", "Causal cComBat"), ordered=TRUE))
+
+batch.dif <- lines %>%
+  pivot_wider(names_from=Batch, values_from=Y) %>%
+  group_by(X, Setting, Overlap, Algorithm) %>%
+  mutate(ymin=min(`0`, `1`), ymax=max(`0`, `1`))
+
+ggplot(points) +
+  geom_ribbon(data=batch.dif, aes(x=X, ymin=ymin, ymax=ymax), alpha=0.3, fill="red") +
+  geom_point(aes(x=X, y=Y, color=factor(Batch)), size=0.5, alpha=.5) +
+  geom_line(data=lines, aes(x=X, y=Y, color=factor(Batch)), size=1) +
+  scale_color_manual(values = batch.cols, name="Batch") +
+  facet_grid(Setting~Algorithm) +
+  theme_bw() +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+        strip.background=element_blank(), text=element_text(size=13),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
+```
+
+```{r}
+R <- 1000
+eff_sz.settings <- c("positive"=1/2, "null"=0, "negative"=-1/2)
+betas <- seq(1, 5, length.out=11)
+```
+
+```{r}
+sim_results <- do.call(rbind, lapply(names(eff_sz.settings), function(j) {
+  eff_sz=eff_sz.settings[[j]]
+  print(j)
+  sim.cate.settings <- lapply(1:length(betas), function(i) {
+    list(alpha=2, unbalancedness=betas[i], eff_sz=eff_sz)
+  })
+  
+  names(sim.cate.settings) <- as.character(1:length(betas))
+  sig.cate <- compute.mean_CATE(cb.sims.sim_sigmoid, paramlist=sim.cate.settings,
+                                R=R, fname=NULL) %>% #sprintf("sim_outs/sigmoid_%s", j)) %>%
+    mutate(Experiment="Non-Linearity")
+  linear.cate <- compute.mean_CATE(cb.sims.sim_linear, paramlist=sim.cate.settings,
+                                R=R, fname=NULL) %>% #sprintf("sim_outs/line_%s", j)) %>%
+    mutate(Experiment="Linear")
+  imp.cate <- compute.mean_CATE(cb.sims.sim_impulse, paramlist=sim.cate.settings,
+                                R=R, fname=NULL) %>%#sprintf("sim_outs/imp_%s", j)) %>%
+    mutate(Experiment="Non-Monotone")
+  
+  return(rbind(sig.cate, linear.cate, imp.cate) %>% mutate(True.Effect=eff_sz))
+}))
+saveRDS(sim_results, "../data/simulations.rds")
+```
+
+```{r}
+sim_results <- (dat=readRDS("../data/simulations.rds")) %>%
+    group_by(Setting, Overlap, Experiment, True.Effect) %>%
+    summarize(`Mean cComBat`=mean(abs(`cComBat`), na.rm=TRUE),
+              `Mean cComBat-GAM`=mean(abs(`cComBat-GAM`), na.rm=TRUE),
+              `Mean Causal cComBat`=mean(abs(`Causal cComBat`), na.rm=TRUE),
+              `SE cComBat`=sd(`cComBat`)/sqrt(n()),
+              `SE cComBat-GAM`=sd(`cComBat-GAM`)/sqrt(n()),
+              `SE Causal cComBat`=sd(`Causal cComBat`)/sqrt(n()),
+              `lpt cComBat`=quantile(`cComBat`, probs=0.1, na.rm=TRUE),
+              `lpt cComBat-GAM`=quantile(`cComBat-GAM`, probs=0.1, na.rm=TRUE),
+              `lpt Causal cComBat`=quantile(`Causal cComBat`, probs=0.1, na.rm=TRUE),
+              `upt cComBat`=quantile(`cComBat`, probs=0.9, na.rm=TRUE),
+              `upt cComBat-GAM`=quantile(`cComBat-GAM`, probs=0.9, na.rm=TRUE),
+              `upt Causal cComBat`=quantile(`Causal cComBat`, probs=0.9, na.rm=TRUE),
+              `nfail cComBat`=sum(is.nan(`cComBat`)),
+              `nfail Causal cComBat`=sum(is.nan(`Causal cComBat`)),
+              `nfail cComBat-GAM`=sum(is.nan(`cComBat-GAM`)))
+
+merged.longdat <- sim_results %>%
+  dplyr::select(Setting, Overlap, `Mean cComBat`, `Mean cComBat-GAM`, `Mean Causal cComBat`, `SE cComBat`,
+         `SE cComBat-GAM`, `SE Causal cComBat`, `nfail Causal cComBat`, `nfail cComBat`, `nfail cComBat-GAM`,
+         `lpt Causal cComBat`, `lpt cComBat`, `lpt cComBat-GAM`,
+         `upt Causal cComBat`, `upt cComBat`, `upt cComBat-GAM`, True.Effect, Experiment) %>%
+  pivot_longer(`Mean cComBat`:`upt cComBat-GAM`, names_to=c(".value", "Technique"), 
+                    names_pattern = "([^\\s]+)\\s(.+$)") %>%
+  mutate(Experiment=recode_factor(Experiment, "Asymmetric Non-Monotonicity"="Non-Monotone")) %>%
+  filter(Experiment %in% c("Non-Linearity", "Linear", "Non-Monotone")) %>%
+  mutate(Experiment = factor(Experiment, ordered=TRUE, levels=c("Linear", "Non-Linearity", "Non-Monotone"))) %>%
+  filter(Overlap > .01)
+
+hline.dat <- do.call(rbind, lapply(eff_sz.settings, function(eff_sz) {
+  return(data.frame(True.Effect=eff_sz, Experiment=c("Linear", "Non-Linearity", "Non-Monotone")))
+}))
+```
+
+```{r}
+ggplot(data=merged.longdat, aes(x=Overlap, y=Mean)) +
+    #geom_ribbon(data=merged.longdat, aes(ymin=lpt, ymax=upt, fill=Technique), alpha=0.4) +
+    geom_line(data=merged.longdat, aes(color=Technique, linetype=Technique), linetype="dotted") +
+    geom_line(data=merged.longdat %>% filter(nfail <= R/2), aes(color=Technique, linetype=Technique)) +
+    scale_color_manual(values=c("cComBat"="darkgreen", "cComBat-GAM"="blue", "Causal cComBat"="red")) +
+    scale_linetype_manual(values=c("cComBat"="solid", "cComBat-GAM"="dashed", "Causal cComBat"="solid")) +
+    geom_hline(data=hline.dat, aes(yintercept=True.Effect), color="black", linetype="dashed") +
+    geom_hline(aes(yintercept=0), color="black", linetype="dotted") +
+    scale_x_continuous(name="Covariate Overlap", trans="log2", 
+                       breaks=c(0.01, 0.1, 1)) +
+    scale_y_continuous(name="|CATE|", limits=c(0, 3.1), expand=c(0, 0)) +
+    theme_bw() +
+    ggtitle("Performance of batch effect correction techniques on simulated data") +
+    facet_grid(True.Effect ~ Experiment) +
+    theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+          strip.background=element_blank(), text=element_text(size=10))
+```
+
