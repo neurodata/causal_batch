@@ -24,7 +24,7 @@ Batch effects, undesirable sources of variance across multiple experiments, pres
 # Repo Contents
 
 - [R](./R): `R` package code.
-- [docs](./docs): package documentation, and usage of the `causalBatch` package on many real and simulated data examples.
+- [docs](./docs): usage of the `causalBatch` package on many real and simulated data examples for scientific articles.
 - [man](./man): package manual for help in R session.
 - [tests](./tests): `R` unit tests written using the `testthat` package.
 - [vignettes](./vignettes): `R` vignettes for R session html help pages.
@@ -123,6 +123,8 @@ vignette("causal_ccombat", package="causalBatch")
 ```
 
 # Results
+
+See [Batch Effects Paper](https://github.com/neurodata/causal_batch/tree/main/docs/batch_effects_paper) for instructions to reproduce figures from Bridgeford et al. (2024). 
 
 # Citation
 
