@@ -1,0 +1,5 @@
+This folder contains the necessary figures and scripts to reproduce the results obtained in Bridgeford et al. (2024). This folder contains the following contents:
+
+- [The drivers](https://github.com/neurodata/causal_batch/tree/main/docs/batch_effects_paper/data_analysis_scripts), which are the scripts which took connectomes from the CoRR dataset and produced first-pass processed results. These scripts were executed on a high-performance server, and took approximately 1 week to run on a machine with 100 cores and 1 TB RAM. The necessary input data for these scripts can be downloaded from [the neurodata website](https://neurodata.io/mri/).
+- [The processed data](https://github.com/neurodata/causal_batch/tree/main/docs/batch_effects_paper/data), which are the processed derivatives produced by the drivers.
+- [Figure reproduction code](https://github.com/neurodata/causal_batch/tree/main/docs/batch_effects_paper/Figure_reproduction), which takes the processed data and produces the figures found in the manuscript.
