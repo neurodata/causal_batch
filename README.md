@@ -114,8 +114,6 @@ The package should take approximately 40 seconds to install with vignettes on a 
 
 # Demo
 
-## Functions
-
 For interactive demos of the functions, please check out the vignettes built into the package. They can be accessed as follows:
 
 ```
