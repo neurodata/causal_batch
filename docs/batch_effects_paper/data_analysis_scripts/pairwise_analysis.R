@@ -121,26 +121,26 @@ covars.tbl <- cov.dat %>% ungroup() %>% mutate(id=row_number())
 Dmtx.dat <- as.matrix(parDist(gr.dat, threads=ncores))
 
 dset.pairs <- combn(datasets, 2)
-output <- do.call(rbind, mclapply(1:dim(dset.pairs)[2], function(i) {
+output <- mclapply(1:dim(dset.pairs)[2], function(x) {
+  dset.1 <- dset.pairs[1,x]
+  dset.2 <- dset.pairs[2,x]
+  print(sprintf("%d: %s, %s", x, dset.1, dset.2))
+  n.1 <- sum(covars.tbl$Dataset == dset.1)
+  n.2 <- sum(covars.tbl$Dataset == dset.2)
+  if (n.1 < n.2) {
+    dset.i <- dset.1; dset.j <- dset.2
+    n.i <- n.1; n.j <- n.2
+  } else if (n.1 >= n.2) {
+    dset.i <- dset.2; dset.j <- dset.1
+    n.i <- n.2; n.j <- n.1
+  }
+  cov.dat.ij <- covars.tbl %>%
+    filter(Dataset %in% c(dset.i, dset.j)) %>%
+    mutate(Treatment = as.numeric(Dataset == dset.i))
+  ov.ij=compute_overlap(cov.dat.ij %>% filter(Dataset == dset.i), cov.dat.ij %>% filter(Dataset == dset.j))
+  
   tryCatch({
-    dset.1 <- dset.pairs[1,x]
-    dset.2 <- dset.pairs[2,x]
-    print(sprintf("%d: %s, %s", x, dset.1, dset.2))
-    n.1 <- sum(covars.tbl$Dataset == dset.1)
-    n.2 <- sum(covars.tbl$Dataset == dset.2)
-    if (n.1 < n.2) {
-      dset.i <- dset.1; dset.j <- dset.2
-      n.i <- n.1; n.j <- n.2
-    } else if (n.1 >= n.2) {
-      dset.i <- dset.2; dset.j <- dset.1
-      n.i <- n.2; n.j <- n.1
-    }
-    
-    cov.dat.ij <- covars.tbl %>%
-      filter(Dataset %in% c(dset.i, dset.j)) %>%
-      mutate(Treatment = as.numeric(Dataset == dset.i))
     Dmtx.dat.ij <- Dmtx.dat[cov.dat.ij$id, cov.dat.ij$id]
-    ov.ij=compute_overlap(cov.dat.ij %>% filter(Dataset == dset.i), cov.dat.ij %>% filter(Dataset == dset.j))
     
     if (length(unique(cov.dat.ij$Sex)) != 1) {
       z1 <- as.matrix(cov.dat.ij %>% dplyr::select(Sex) %>%
@@ -182,8 +182,12 @@ output <- do.call(rbind, mclapply(1:dim(dset.pairs)[2], function(i) {
                                   Overlap=ov.ij)
     }
     
-    return(do.call(rbind, c(result)))
+    do.call(rbind, c(result))
+  }, error=function(e) {
+    data.frame(Data="Raw", Method=c(names(fns), "Crossover"), Dataset.Trt=dset.i,
+                      Dataset.Ctrl=dset.j, Effect=NA, p.value=NA,
+                      Overlap=ov.ij)
   })
-}, mc.cores=ncores))
+}, mc.cores=ncores)
 
-saveRDS(output, "../data/pairwise.rds")
+saveRDS(do.call(rbind, output), "../data/pairwise.rds")

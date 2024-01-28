@@ -1,6 +1,7 @@
 require(energy)
 require(cdcsis)
 require(causalBatch)
+require(sva)
 
 # Conditional distance correlation from Wang et al., 2015
 cond.dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1) {
@@ -35,6 +36,30 @@ dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE,
   return(list(Test=test.out))
 }
 
+cond.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
+  mod <- model.matrix(as.formula("~Sex + Age"), data=Xs)
+  Ys.cor <- t(ComBat(t(Ys), Ts, mod=mod))
+  return(Ys.cor)
+}
+
+assoc.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
+  Ys.cor <- t(ComBat(t(Ys), Ts))
+  return(Ys.cor)
+}
+
+raw.preproc <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
+  return(Ys)
+}
+
+
+gcm <- function(Y, G, X, R=1000, regr.method="xgboost") {
+  res <- tryCatch({
+    gcm.test(as.matrix(Y), as.matrix(G), as.matrix(X), regr.method=regr.method, nsim=R)},
+    error=function(e) {
+      return(list(stat=NaN, pvalue=NaN))
+    })
+  return(list(statistic=res$test.statistic, p.value=res$p.value))
+}
 
 compute_overlap <- function(X1, X2) {
   # probability of drawing two individuals with the same sex
