@@ -146,9 +146,9 @@ preproc.dat <- lapply(names(cohorts), function(crt) {
       # if american clique, continent will be a redundant variable and cause an error
       # since it has only 1 level making the model matrix
       if (crt == "American Clique") {
-        match.form <- "Age + Sex"
+        match.form <- "Age + factor(Sex)"
       } else {
-        match.form <- "Age + Sex + Continent"; exact=as.formula("~Sex + Continent")
+        match.form <- "Age + factor(Sex) + Continent"; exact=as.formula("~Sex + Continent")
       }
       
       # "correct" batch effect
@@ -156,7 +156,11 @@ preproc.dat <- lapply(names(cohorts), function(crt) {
                                               match.args=list(method="nearest", exact=exact, 
                                                               replace=FALSE, caliper=.1)))
       
-      list(Ys=cor.dat$Ys.corrected, Ts=cor.dat$Ts, Xs=cor.dat$Xs)
+      res <- list(Ys=cor.dat$Ys.corrected, Ts=cor.dat$Ts, Xs=cor.dat$Xs)
+      if (fn.name == "Causal cComBat" & crt == "American Clique") {
+        res$Retained.Ids <- cor.dat$Retained.Ids
+      }
+      res
     }, error=function(e) {
       NULL
     })
@@ -171,7 +175,13 @@ saveRDS(preproc.dat, "../data/corrected_data.rds")
 preproc.dat <- readRDS("../data/corrected_data.rds")
 output <- lapply(names(cohorts), function(crt) {
   result <- lapply(names(fns), function(fn.name) {
+    print(sprintf("%s, %s", crt, fn.name))
     cor.dat <- preproc.dat[[crt]][[fn.name]]
+    if (crt == "American Clique" & fn.name != "Causal cComBat") {
+      retained.ids <- preproc.dat$`American Clique`$`Causal cComBat`$Retained.Ids
+      cor.dat$Ys <- cor.dat$Ys[retained.ids,]; cor.dat$Ts <- cor.dat$Ts[retained.ids]
+      cor.dat$Xs <- cor.dat$Xs[retained.ids,]
+    }
     # test whether evidence to reject that edge and sex | age are independent
     X.sex <- cor.dat$Xs$Sex; X.age <- cor.dat$Xs$Age
     d <- 116^2
@@ -200,4 +210,4 @@ output <- lapply(names(cohorts), function(crt) {
 })
 output.subseq <- do.call(rbind, output)
 
-saveRDS(outputs.subseq, "../data/subseq.rds")
+saveRDS(output.subseq, "../data/subseq.rds")

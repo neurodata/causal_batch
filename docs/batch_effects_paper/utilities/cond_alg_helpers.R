@@ -38,7 +38,7 @@ dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE,
 }
 
 cond.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
-  mod <- model.matrix(as.formula("~Sex + Age"), data=Xs)
+  mod <- model.matrix(as.formula("~factor(Sex) + Age"), data=Xs)
   Ys.cor <- t(ComBat(t(Ys), Ts, mod=mod))
   return(list(Ys.corrected=Ys.cor, Ts=Ts, Xs=Xs))
 }
