@@ -1,0 +1,110 @@
+---
+title: "edgewise_analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(ggplot2)
+require(energy)
+require(parallel)
+require(tidyverse)
+require(mltools)
+require(grid)
+require(gridExtra)
+ncores <- parallel::detectCores() - 1
+
+alpha = .05
+```
+
+
+
+```{r}
+meth.ord <- c("Raw", "ComBat", "cComBat", "cComBat-GAM", "Causal cComBat", "Causal cComBat-GAM")
+row.ord <- c("All", "American Clique")
+outputs <- readRDS('../data/subseq.rds') %>%
+  ungroup() %>%
+  mutate(p.value=p.adjust(p.value, method="BH")) %>%
+  group_by(Method, Cohort) %>%
+  arrange(p.value, desc(Statistic)) %>%
+  mutate(Rank=row_number()) %>%
+  mutate(Method=recode_factor(Method, "causal ComBat"="Causal cComBat", "conditional ComBat"="cComBat", "conditional NeuroH"="cComBat-GAM", "causal NeuroH"="Causal cComBat-GAM")) %>%
+  mutate(Method=factor(Method, levels=meth.ord, ordered = TRUE),
+         Cohort=factor(Cohort, levels=row.ord, ordered=TRUE)) %>%
+  ungroup()
+```
+
+```{r}
+dice <- function(a, b) {
+  length(intersect(a, b))/length(union(a, b))
+}
+
+overlap_dice <- function(X) {
+  methods = unique(X$Method)
+  Dice=sapply(unique(X$Method), function(meth1) {
+    sapply(unique(X$Method), function(meth2) {
+      suppressMessages(
+        dice((X %>% filter(Method == meth1) %>% ungroup())$Edge, 
+             (X %>% filter(Method == meth2) %>% ungroup())$Edge))
+    })
+  })
+  colnames(Dice) <- rownames(Dice) <- unique(X$Method)
+  data.frame(Method1=colnames(Dice)[col(Dice)], Method2=rownames(Dice)[row(Dice)],
+             DICE=c(Dice)) %>%
+    mutate(Method1=factor(Method1, levels=meth.ord, ordered=TRUE),
+           Method2=factor(Method2, levels=meth.ord, ordered=TRUE)) %>%
+    arrange(Method1, Method2)
+}
+
+n.rank <- 100
+dice.mtx.lng <- outputs %>%
+  filter((Method == "Raw" & Cohort == "All") | (Method == "ComBat" & Cohort == "All") |
+           (Method == "cComBat" & Cohort == "All") | (Method =="cComBat-GAM" & Cohort == "All") |
+           (Method == "Causal cComBat" & Cohort == "American Clique") | (Method == "Causal cComBat-GAM" & Cohort  == "American Clique")) %>%
+  filter(Rank <= n.rank) %>%
+  overlap_dice()
+
+dice.plt <- dice.mtx.lng %>%
+  filter(Method1 != Method2) %>%
+  ggplot(aes(x=Method1, y=Method2, fill=DICE)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="darkgreen", limits=c(0, 1)) +
+    xlab("Method") +
+    ylab("Method") +
+    ggtitle(sprintf("(B) DICE Overlap of Top %d Edges", n.rank)) +
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+
+```{r}
+boxes.cmp <- data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method=c("Raw", "ComBat", "cComBat", "cComBat-GAM", "Causal cComBat", "Causal cComBat-GAM")) %>%
+  mutate(Cohort=c("All", "All", "All", "All", "American Clique", "American Clique"), Color="Included") %>%
+  rbind(data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method="Causal cComBat", Cohort="All", Color="Not Possible")) %>%
+  rbind(data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method="Causal cComBat-GAM", Cohort="All", Color="Not Possible")) %>%
+  mutate(Method=factor(Method, levels=meth.ord, ordered = TRUE))
+  
+plt.sig <- outputs %>%
+  rbind(outputs %>%
+          mutate(Row.Tmp=Row, Row = Column, Column=Row.Tmp) %>% select(-Row.Tmp)) %>%
+  filter(p.value <= alpha) %>% # & Rank <= n.rank) %>%
+  ggplot() +
+  geom_tile(aes(x=Row, y=Column, alpha=rev(Rank), fill=Rank)) +
+  geom_rect(data=boxes.cmp, aes(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax, color=Color), fill=NA) +
+  scale_fill_gradient(name="Rank", low="#530481", high="#fdf2fe") +
+  scale_alpha_continuous() +
+  scale_color_manual("", values=c("Included"="#4daf4a", "Not Possible"="#e41a1c")) +
+  ggtitle(sprintf("(A) Comparison of Significant Edges based on Correction Technique", n.rank)) +
+  scale_x_discrete(breaks=c(1, 116), name="Parcel") +
+  scale_y_discrete(breaks=c(1, 116), name="Parcel") +
+  facet_grid("Cohort~Method") +
+  guides(alpha=FALSE) +
+  theme_bw()
+```
+
+```{r, fig.height=8.22, fig.width=10.57}
+grid.arrange(plt.sig, dice.plt, nrow=1, widths=c(.3, .2))
+```
