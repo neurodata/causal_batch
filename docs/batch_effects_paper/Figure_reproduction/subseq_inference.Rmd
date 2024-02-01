@@ -61,9 +61,10 @@ overlap_dice <- function(X) {
 
 n.rank <- 100
 dice.mtx.lng <- outputs %>%
-  filter((Method == "Raw" & Cohort == "All") | (Method == "ComBat" & Cohort == "All") |
-           (Method == "cComBat" & Cohort == "All") | (Method =="cComBat-GAM" & Cohort == "All") |
-           (Method == "Causal cComBat" & Cohort == "American Clique") | (Method == "Causal cComBat-GAM" & Cohort  == "American Clique")) %>%
+  filter(Cohort == "American Clique") %>%
+  #filter((Method == "Raw" & Cohort == "All") | (Method == "ComBat" & Cohort == "All") |
+  #         (Method == "cComBat" & Cohort == "All") | (Method =="cComBat-GAM" & Cohort == "All") |
+  #         (Method == "Causal cComBat" & Cohort == "American Clique") | (Method == "Causal cComBat-GAM" & Cohort  == "American Clique")) %>%
   filter(Rank <= n.rank) %>%
   overlap_dice()
 
@@ -85,22 +86,26 @@ boxes.cmp <- data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method=c("Raw", "Com
   mutate(Cohort=c("All", "All", "All", "All", "American Clique", "American Clique"), Color="Included") %>%
   rbind(data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method="Causal cComBat", Cohort="All", Color="Not Possible")) %>%
   rbind(data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method="Causal cComBat-GAM", Cohort="All", Color="Not Possible")) %>%
-  mutate(Method=factor(Method, levels=meth.ord, ordered = TRUE))
+  mutate(Method=factor(Method, levels=meth.ord, ordered = TRUE)) %>%
+  filter(Cohort == "American Clique")
   
 plt.sig <- outputs %>%
   rbind(outputs %>%
           mutate(Row.Tmp=Row, Row = Column, Column=Row.Tmp) %>% select(-Row.Tmp)) %>%
-  filter(p.value <= alpha) %>% # & Rank <= n.rank) %>%
+  filter(p.value <= alpha, Cohort == "American Clique") %>% # & Rank <= n.rank) %>%
+  filter(Method %in% c("Raw", "ComBat", "cComBat", "Causal cComBat")) %>%
   ggplot() +
   geom_tile(aes(x=Row, y=Column, alpha=rev(Rank), fill=Rank)) +
-  geom_rect(data=boxes.cmp, aes(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax, color=Color), fill=NA) +
+  #geom_rect(data=boxes.cmp %>% filter(Method %in% c("Raw", "ComBat", "cComBat", "Causal cComBat")),
+  #          aes(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax, color=Color), fill=NA) +
   scale_fill_gradient(name="Rank", low="#530481", high="#fdf2fe") +
   scale_alpha_continuous() +
-  scale_color_manual("", values=c("Included"="#4daf4a", "Not Possible"="#e41a1c")) +
-  ggtitle(sprintf("(A) Comparison of Significant Edges based on Correction Technique", n.rank)) +
+  #scale_color_manual("", values=c("Included"="#4daf4a", "Not Possible"="#e41a1c")) +
+  ggtitle("(A) Comparison of Significant Edges based on Correction Technique") +
   scale_x_discrete(breaks=c(1, 116), name="Parcel") +
   scale_y_discrete(breaks=c(1, 116), name="Parcel") +
-  facet_grid("Cohort~Method") +
+  # facet_grid("Cohort~Method") +
+  facet_grid(".~Method") +
   guides(alpha=FALSE) +
   theme_bw()
 ```
