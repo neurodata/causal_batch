@@ -1,0 +1,184 @@
+---
+title: "CoRR Demographics"
+output: html_document
+date: "2024-02-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message=FALSE}
+require(tidyverse)
+require(grid)
+require(dplyr)
+require(gridExtra)
+require(parallel)
+require(gtable)
+require(scales)
+require(cowplot)
+#source('./causal_investigation_helpers.R')
+```
+
+# Figures
+
+
+```{r}
+select <- dplyr::select
+mutate <- dplyr::mutate
+arrange = dplyr::arrange
+dset.ord <-readRDS("../data/corr_fmri_metadata.rds")$Dataset
+
+get_scaled_densities <- function(x, bw = 1.58) {
+    res <- density(x, bw = bw)
+    return(
+        data.frame(
+            x = res$x, y = res$y/max(res$y) *
+                length(x)
+        )
+    )
+}
+
+plot_demographics <- function(in_df, nested=FALSE, title="") {
+
+    plt <- (df <- in_df %>%
+        group_by(Dataset, Sex, Continent) %>%
+        do(get_scaled_densities(.$Age)) %>%
+        ungroup() %>%
+        mutate(
+            y = y/max(y) +
+                as.numeric(Dataset)
+        )) %>%
+        ggplot(
+            aes(
+                ymin = as.numeric(Dataset),
+                group = paste0(Dataset, Sex),
+                color = Sex, fill = Sex, x = x, y = y, ymax = y
+            )
+        ) +
+        geom_ribbon(alpha = 0.2) +
+        geom_line(color = "black") +
+        geom_jitter(
+            data = in_df, aes(
+                x = Age, y = as.numeric(Dataset),
+                color = factor(Sex)
+            ),
+            width = 0.25, height = 0.2, size = 0.1, inherit.aes = FALSE
+        ) +
+        scale_fill_manual(
+            values = c(`1` = "red", `2` = "blue"),
+            labels = c(`1` = "Female", `2` = "Male"),
+            name = "Sex"
+        ) +
+        scale_color_manual(
+            values = c(`1` = "red", `2` = "blue"),
+            labels = c(`1` = "Female", `2` = "Male"),
+            name = "Sex", aesthetics = "color"
+        ) +
+        scale_y_continuous(
+            breaks = 1:length(levels(df$Dataset)),
+            labels = levels(df$Dataset),
+            name = "Dataset", expand = c(0.02, 0.02),
+            position = "right"
+        ) +
+        xlab("Age") +
+        ggtitle(title) +
+        theme_bw() +
+        theme(panel.grid.minor = element_blank())
+    
+    if (nested == FALSE) {
+      plt + facet_grid("Continent~.", scales = "free", space = "free_y", switch = "y")
+
+    }
+    else if (nested== TRUE){
+      plt + facet_grid("Dataset + Continent ~ .", scales = "free", space = "free_y", switch = "y")
+    }
+
+    plt = plt %>%
+        grid.arrange(left = ggpubr::text_grob("Continent", rot = 90))
+
+    return(plt)
+}
+
+
+overlap_dist <- function(X) {
+  datasets = dset.ord
+  D=sapply(datasets, function(dataseti) {
+    sapply(datasets, function(datasetj) {
+      suppressMessages(
+        compute_overlap(X %>% filter(Dataset == dataseti) %>% ungroup(), 
+                        X %>% filter(Dataset == datasetj) %>% ungroup()))
+    })
+  })
+  colnames(D) <- rownames(D) <- datasets
+  data.frame(Dataset1=colnames(D)[col(D)], Dataset2=rownames(D)[row(D)],
+             Overlap=c(D)) %>%
+    mutate(Dataset1=factor(Dataset1, levels=dset.ord, ordered=TRUE),
+           Dataset2=factor(Dataset2, levels=dset.ord, ordered=TRUE)) %>%
+    arrange(Dataset1, Dataset2)
+}
+
+compute_overlap <- function(X1, X2) {
+  # probability of drawing two individuals with the same sex
+  X1.sex <- X1 %>%
+     group_by(Sex) %>%
+     summarize(Per=n(), .groups="keep") %>%
+     ungroup() %>%
+     mutate(Per=Per/sum(Per))
+  X2.sex <- X2 %>%
+     group_by(Sex) %>%
+     summarize(Per=n(), .groups="keep") %>%
+     ungroup() %>%
+     mutate(Per=Per/sum(Per))
+  range.age <- c(min(X1$Age, X2$Age), max(X1$Age, X2$Age))
+  per.ov <- sum(sapply(1:2, function(sex) {
+    tryCatch({
+      ov.sex.X1 <- (X1.sex %>% filter(Sex == sex))$Per
+      ov.sex.X2 <- (X2.sex %>% filter(Sex == sex))$Per
+      X1.sex.age <- (X1 %>% filter(Sex == sex) %>% select(Age))$Age
+      X2.sex.age <- (X2 %>% filter(Sex == sex) %>% select(Age))$Age
+      # obtain pdf for age
+      X1.dens <- density(as.numeric(X1.sex.age), from=min(range.age), to=max(range.age))
+      X1.dens$y <- X1.dens$y/sum(X1.dens$y)
+      X2.dens <- density(as.numeric(X2.sex.age), from=min(range.age), to=max(range.age))
+      X2.dens$y <- X2.dens$y/sum(X2.dens$y)
+      ov.sex.age <- sum(pmin(X1.dens$y*ov.sex.X1, X2.dens$y*ov.sex.X2))
+      return(ov.sex.age)
+      }, error=function(e) {return(0)})
+  }))
+  return(as.numeric(unique((X1$Continent)) == unique(X2$Continent))*per.ov)
+}
+
+compute_overlaps <- function(demographics) {
+  demographics %>%
+    group_by(Dataset) %>%
+    select(Dataset, Continent, Sex, Age) %>%
+    {do.call(overlap_dist, list(X=(.)))}
+}
+
+plot_overlaps <- function(ovs, xlabel="Dataset", ylabel="Dataset", title="") {
+  ggplot(ovs, aes(x=Dataset1, y=Dataset2, fill=Overlap)) +
+    geom_tile() +
+    scale_fill_gradient(high="#530481", low="#fdf2fe") +
+    xlab(xlabel) +
+    ylab(ylabel) +
+    ggtitle(title) +
+    theme_bw() +
+    theme(axis.text.x=element_text(hjust = 1, angle = 90))
+}
+```
+
+```{r,tidy=TRUE, tidy.opts=list(width.cutoff=60), height=20, width=10}
+corr.demo <- readRDS("../data/demographic.rds") %>%
+  mutate(Dataset=factor(Dataset, levels=dset.ord, ordered=TRUE))
+corr.demo.plt <- plot_demographics(corr.demo, title="(A) Demographic Distributions", nested=TRUE)
+
+corr.ovs <- compute_overlaps(corr.demo)
+
+corr.ovs.plt <- plot_overlaps(corr.ovs, title="(B) Overlaps")
+```
+
+```{r}
+grid.arrange(corr.demo.plt, corr.ovs.plt, ncol=2)
+```
