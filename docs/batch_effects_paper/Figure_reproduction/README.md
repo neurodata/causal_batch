@@ -15,5 +15,8 @@ ggpubr=0.6.0
 reticulate=1.34.0
 MatrixStats=1.2.0
 BiocParallel=1.36.0
+scales=1.3.0
+cowplot=1.1.3
+tidyvers=2.0.0
 ```
 
