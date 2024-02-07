@@ -13,7 +13,7 @@
 - [Demo](#demo)
 - [Results and figure reproduction](#results-and-figure-reproduction)
 - [License](./LICENSE)
-- [Issues](https://github.com/ebridge2/causalBatch/issues)
+- [Issues](https://github.com/ebridge2/causal_batch/issues)
 - [Citation](#citation)
 
 
