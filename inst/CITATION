@@ -3,7 +3,6 @@ bibentry(
   title    = "(causalBatch): Causal Batch Effects",
   author   = c(as.person("Eric W. Bridgeford"),
                as.person("Michael Powell"),
-               as.person("Gregory Kiar"),
                as.person("Brian Caffo"),
                as.person("Joshua T. Vogelstein")),
   note     = "R-package version 1.0",
