@@ -9,6 +9,7 @@ cb.correct.caus_cComBat(
   Ts,
   Xs,
   match.form,
+  reference = NULL,
   match.args = list(method = "nearest", exact = NULL, replace = FALSE, caliper = 0.1),
   retain.ratio = 0.05
 )
@@ -21,6 +22,8 @@ cb.correct.caus_cComBat(
 \item{Xs}{\code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.}
 
 \item{match.form}{A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.}
+
+\item{reference}{the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.}
 
 \item{match.args}{A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.}
 

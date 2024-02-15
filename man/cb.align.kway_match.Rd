@@ -8,6 +8,7 @@ cb.align.kway_match(
   Ts,
   Xs,
   match.form,
+  reference = NULL,
   match.args = list(method = "nearest", exact = NULL, replace = FALSE, caliper = 0.1),
   retain.ratio = 0.05
 )
@@ -19,9 +20,11 @@ cb.align.kway_match(
 
 \item{match.form}{A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.}
 
+\item{reference}{the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.}
+
 \item{match.args}{A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.}
 
-\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.}
+\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 }
 \value{
 an \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
@@ -37,7 +40,7 @@ For more details see the help vignette:
 
 \examples{
 library(causalBatch)
-sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=1.5)
 cb.align.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 }
 \references{

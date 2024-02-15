@@ -11,7 +11,7 @@ cb.align.vm_trim(Ts, Xs, retain.ratio = 0.05, ddx = FALSE)
 
 \item{Xs}{\code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.}
 
-\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws an warning Defaults to \code{0.05}.}
+\item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 
 \item{ddx}{whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.}
 }

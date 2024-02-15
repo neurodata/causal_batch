@@ -14,6 +14,7 @@
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
+#' @param reference the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @return a list, containing the following:
@@ -39,8 +40,8 @@
 #' cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
-cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
-  retain.ids <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, match.args=match.args, retain.ratio=retain.ratio)))
+cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
+  retain.ids <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, match.args=match.args, retain.ratio=retain.ratio)))
   
   Y.tilde <- Ys[retain.ids,,drop=FALSE]; X.tilde <- Xs[retain.ids,,drop=FALSE]; T.tilde <- Ts[retain.ids]
   
@@ -60,6 +61,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
+#' @param reference the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @return an \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
@@ -77,16 +79,19 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, match.args=list(meth
 #' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=1.5)
 #' cb.align.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' @export
-cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
+cb.align.kway_match <- function(Ts, Xs, match.form, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
   # obtain the smallest batch
   Ts <- as.character(Ts)
   Xs <- cbind(data.frame(Batch=Ts), Xs)
   batch.sum <- Ts %>% table()
   batch.names <- names(batch.sum)
-  tx.batch <- batch.names[which.min(batch.sum)]
+  if (is.null(reference)) {
+    tx.batch <- batch.names[which.min(batch.sum)]
+  } else {
+    tx.batch <- reference
+  }
   rownames(Xs) <- 1:nrow(Xs)
   covar.tx <- Xs[Ts == tx.batch,,drop=FALSE]
-  
   
   paired.matches <- lapply(batch.names[batch.names != tx.batch], function(batch) {
     covar.cont <- Xs[Ts == batch,]
@@ -130,7 +135,7 @@ cb.align.kway_match <- function(Ts, Xs, match.form, match.args=list(method="near
 #' }
 covariate.match <- function(covar.tx, covar.cont, match.form, match.args=NULL) {
   n.kprime <- dim(covar.tx)[1]; n.k <- dim(covar.cont)[1]
-  n.matches <- floor(n.k/n.kprime)
+  n.matches <- max(1, floor(n.k/n.kprime))
   match <- do.call(matchit, c(list(formula(sprintf("as.factor(Treatment) ~ %s", match.form)),
                                    data=rbind(covar.tx %>% mutate(Treatment = 1),
                                               covar.cont %>% mutate(Treatment = 0)),

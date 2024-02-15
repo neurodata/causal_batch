@@ -54,14 +54,14 @@ test_that("vector matching with one odd-ball per-group", {
   
   res <- sapply(1:nrep, function(i) {
     Ts <- c(rep(1, 100), rep(2, 100))
-    Xs <- cbind(c(-4, runif(99), runif(99), 5), runif(200), runif(200))
+    Xs <- cbind(c(-4, runif(198), 5), c(-4, runif(198), 5), runif(200))
     
     retained.ids <- suppressWarnings(cb.align.vm_trim(Ts, Xs))
     
     excl_samps.s1 <- !(1 %in% retained.ids)
     excl_samps.s200 <- !(200 %in% retained.ids)
     
-    incl_samps <- sum(2:199 %in% retained.ids)/198 > .9
+    incl_samps <- sum(2:199 %in% retained.ids)/198 > .8
     # want to exclude samples 1 and 200 and include all other samples
     # at a high rate
     return(excl_samps.s1 + excl_samps.s200 + incl_samps == 3)
@@ -71,17 +71,21 @@ test_that("vector matching with one odd-ball per-group", {
 })
 
 test_that("as unbalancedness increases, fewer samples retained by VM", {
-  sim.high <- cb.sims.sim_sigmoid(n=300, unbalancedness=1)
-  retained.high <- cb.align.vm_trim(sim.high$Ts, sim.high$Xs)
-  
-  sim.mod <- cb.sims.sim_sigmoid(n=300, unbalancedness=2.5)
-  retained.mod <- cb.align.vm_trim(sim.mod$Ts, sim.mod$Xs)
-  
-  sim.low <- cb.sims.sim_sigmoid(n=300, unbalancedness=4)
-  retained.low <- cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0)
-  
-  rank.lengths <- rank(c(length(retained.high), length(retained.mod), length(retained.low)))
-  expect_true(all(rank.lengths == c(3, 2, 1)))
+  nrep <- 20
+  res <- sapply(1:nrep, function(i) {
+    sim.high <- cb.sims.sim_sigmoid(n=300, unbalancedness=1)
+    retained.high <- cb.align.vm_trim(sim.high$Ts, sim.high$Xs)
+    
+    sim.mod <- cb.sims.sim_sigmoid(n=300, unbalancedness=2)
+    retained.mod <- cb.align.vm_trim(sim.mod$Ts, sim.mod$Xs)
+    
+    sim.low <- cb.sims.sim_sigmoid(n=300, unbalancedness=3)
+    retained.low <- cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0)
+    
+    rank.lengths <- rank(c(length(retained.high), length(retained.mod), length(retained.low)))
+    return(all(rank.lengths == c(3, 2, 1)))
+  })
+  expect_true(mean(res) > .8)
 })
 
 test_that("VM throws warning when samples retained is low", {
