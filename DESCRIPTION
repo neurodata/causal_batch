@@ -1,7 +1,7 @@
 Package: causalBatch
 Type: Package
 Title: Causal Batch Effects
-Version: 1.1
+Version: 1.2
 Date: 2024-01-21
 Authors@R: 
   c(person(given="Eric W.", family="Bridgeford", role=c("aut", "cre"),
