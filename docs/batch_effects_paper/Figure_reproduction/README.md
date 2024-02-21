@@ -17,6 +17,6 @@ MatrixStats=1.2.0
 BiocParallel=1.36.0
 scales=1.3.0
 cowplot=1.1.3
-tidyvers=2.0.0
+tidyverse=2.0.0
 ```
 
