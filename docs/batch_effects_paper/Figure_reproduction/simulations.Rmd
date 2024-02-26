@@ -81,7 +81,7 @@ eff_sz.settings <- c("positive"=1/2, "null"=0, "negative"=-1/2)
 betas <- seq(1, 5, length.out=11)
 ```
 
-```{r}
+```{r, eval=FALSE}
 sim_results <- do.call(rbind, lapply(names(eff_sz.settings), function(j) {
   eff_sz=eff_sz.settings[[j]]
   print(j)
@@ -143,7 +143,6 @@ hline.dat <- do.call(rbind, lapply(eff_sz.settings, function(eff_sz) {
 
 ```{r}
 ggplot(data=merged.longdat, aes(x=Overlap, y=Mean)) +
-    #geom_ribbon(data=merged.longdat, aes(ymin=lpt, ymax=upt, fill=Technique), alpha=0.4) +
     geom_line(data=merged.longdat, aes(color=Technique, linetype=Technique), linetype="dotted") +
     geom_line(data=merged.longdat %>% filter(nfail <= R/2), aes(color=Technique, linetype=Technique)) +
     scale_color_manual(values=c("cComBat"="darkgreen", "cComBat-GAM"="blue", "Causal cComBat"="red")) +

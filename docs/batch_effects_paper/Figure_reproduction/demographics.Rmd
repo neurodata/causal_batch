@@ -18,6 +18,7 @@ require(parallel)
 require(gtable)
 require(scales)
 require(cowplot)
+require(ggplot2)
 #source('./causal_investigation_helpers.R')
 ```
 

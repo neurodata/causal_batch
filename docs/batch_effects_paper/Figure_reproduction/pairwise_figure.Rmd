@@ -14,6 +14,7 @@ require(grid)
 require(dplyr)
 require(gridExtra)
 require(ggpubr)
+require(scales)
 ```
 
 ```{r}
@@ -111,7 +112,7 @@ plot(plt.comb)
 ```
 
 
-## Figure revision (for draft)
+## Detection Figure
 
 ```{r, fig.height=7, fig.width=13}
 pval.cond_vs_adj <- pval_hmap_chart(results, dset.ord.site, categories=c("Conditional (Non-Causal)", "Adjusted (Causal)"),
