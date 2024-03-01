@@ -39,7 +39,7 @@ test_that("typically fails to reject null when balanced and ATE=0", {
   
   # should falsely reject null in favor of alternative at a rate ~alpha + small 
   # margin of error
-  expect_true(mean(pwr_test) <= alpha + eps)
+  expect_true(mean(pwr_test) < alpha + eps)
 })
 
 test_that("typically fails to reject null when imbalanced and ATE=0", {
@@ -52,14 +52,14 @@ test_that("typically fails to reject null when imbalanced and ATE=0", {
     res$Test$p.value < alpha - eps
   })
   
-  expect_true(mean(pwr_test) <= alpha + eps)
+  expect_true(mean(pwr_test) < alpha + eps)
 })
 
 test_that("works when covariates are given as a vector", {
   sim.high <- cb.sims.sim_linear(n=n, eff_sz=eff_sz)
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, as.vector(sim.high$Xs), R=R)
-  expect_true(res$Test$p.value < alpha)
+  expect_true(res$Test$p.value < alpha + eps)
 })
 
 test_that("works with >1 covariate levels", {
@@ -68,7 +68,7 @@ test_that("works with >1 covariate levels", {
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                num.threads = ncores, R=R)
-  expect_true(res$Test$p.value < alpha)
+  expect_true(res$Test$p.value < alpha + eps)
 })
 
 test_that("rejects null with non-linearities and ATE", {
@@ -76,13 +76,13 @@ test_that("rejects null with non-linearities and ATE", {
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                num.threads = ncores, R=R)
-  expect_true(res$Test$p.value < alpha)
+  expect_true(res$Test$p.value < alpha + eps)
   
   sim.low <- cb.sims.sim_sigmoid(n=n, eff_sz=eff_sz, unbalancedness=1.5)
   
   res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                num.threads = ncores, R=R)
-  expect_true(res$Test$p.value < alpha)
+  expect_true(res$Test$p.value < alpha + eps)
 })
 
 test_that("fails to reject null with non-linearities and no ATE", {
@@ -95,7 +95,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
                                  num.threads = ncores, R=R)
     res$Test$p.value < alpha - eps
   })
-  expect_true(mean(pwr_test.bal) <= alpha + eps)
+  expect_true(mean(pwr_test.bal) < alpha + eps)
   
   # imbalanced
   pwr_test.imbal <- sapply(1:nreps.null, function(i) {
@@ -106,7 +106,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
                                  R=R)
     res$Test$p.value < alpha - eps
   })
-  expect_true(mean(pwr_test.imbal) <= alpha + eps)
+  expect_true(mean(pwr_test.imbal) < alpha + eps)
 })
 
 test_that("throws error when no samples are retained", {

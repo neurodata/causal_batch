@@ -58,7 +58,7 @@
 #' 
 #' @export
 cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1, null=FALSE, 
-                        a=4, b=8, err=1/2, nbreaks=200) {
+                        a=-4, b=8, err=1/2, nbreaks=200) {
   batches <- rbinom(n=n, size=1, prob=pi)
   
   beta <- alpha*unbalancedness

@@ -77,8 +77,42 @@ ggplot(points) +
 
 ```{r}
 R <- 1000
-eff_sz.settings <- c("positive"=1/2, "null"=0, "negative"=-1/2)
+eff_sz.settings <- c("positive"=1, "null"=0, "negative"=-1)
 betas <- seq(1, 5, length.out=11)
+n <- 200
+```
+
+```{r}
+settings <- list(
+  "No Batch Effect"=list(n=n, eff_sz=0),
+  "Batch Effect"=list(n=n, eff_sz=1)
+)
+lin.sims <- gen.simulations(cb.sims.sim_linear, settings)
+lin.true_list <- get.true_signal(lin.sims)
+lin.true_df <- get.true_signal_df(lin.true_list)
+
+sig.sims <- gen.simulations(cb.sims.sim_sigmoid, settings)
+sig.true_list <- get.true_signal(sig.sims)
+sig.true_df <- get.true_signal_df(sig.true_list)
+
+nm.sims <- gen.simulations(cb.sims.sim_impulse_asycov, settings)
+nm.true_list <- get.true_signal(nm.sims)
+nm.true_df <- get.true_signal_df(nm.true_list)
+
+true_sig <- rbind(lin.true_df %>% mutate(Context="Linear"),
+                  sig.true_df %>% mutate(Context="Non-Linear"),
+                  nm.true_df %>% mutate(Context="Non-Monotone")) %>%
+  mutate(Batch=factor(Batch), 
+         Context=factor(Context, levels=c("Linear", "Non-Linear", "Non-Monotone"),
+                        ordered=TRUE),
+         Setting=factor(Setting, levels=c("Batch Effect", "No Batch Effect", ordered=TRUE)))
+
+ggplot(true_sig, aes(x=X, y=Y, color=Batch)) +
+  geom_line(linewidth=1.2) +
+  scale_color_manual(values=batch.cols) +
+  facet_grid(Setting ~ Context) +
+  theme_bw(panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+          strip.background=element_blank(), text=element_text(size=10))
 ```
 
 ```{r, eval=FALSE}
@@ -86,7 +120,7 @@ sim_results <- do.call(rbind, lapply(names(eff_sz.settings), function(j) {
   eff_sz=eff_sz.settings[[j]]
   print(j)
   sim.cate.settings <- lapply(1:length(betas), function(i) {
-    list(alpha=2, unbalancedness=betas[i], eff_sz=eff_sz)
+    list(alpha=2, n=n, unbalancedness=betas[i], eff_sz=eff_sz)
   })
   
   names(sim.cate.settings) <- as.character(1:length(betas))
@@ -147,7 +181,7 @@ ggplot(data=merged.longdat, aes(x=Overlap, y=Mean)) +
     geom_line(data=merged.longdat %>% filter(nfail <= R/2), aes(color=Technique, linetype=Technique)) +
     scale_color_manual(values=c("cComBat"="darkgreen", "cComBat-GAM"="blue", "Causal cComBat"="red")) +
     scale_linetype_manual(values=c("cComBat"="solid", "cComBat-GAM"="dashed", "Causal cComBat"="solid")) +
-    geom_hline(data=hline.dat, aes(yintercept=True.Effect), color="black", linetype="dashed") +
+    geom_hline(data=hline.dat, aes(yintercept=abs(True.Effect)), color="black", linetype="dashed") +
     geom_hline(aes(yintercept=0), color="black", linetype="dotted") +
     scale_x_continuous(name="Covariate Overlap", trans="log2", 
                        breaks=c(0.01, 0.1, 1)) +
