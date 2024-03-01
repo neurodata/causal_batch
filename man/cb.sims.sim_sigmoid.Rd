@@ -11,7 +11,7 @@ cb.sims.sim_sigmoid(
   alpha = 2,
   unbalancedness = 1,
   null = FALSE,
-  a = 4,
+  a = -4,
   b = 8,
   err = 1/2,
   nbreaks = 200
