@@ -111,7 +111,8 @@ ggplot(true_sig, aes(x=X, y=Y, color=Batch)) +
   geom_line(linewidth=1.2) +
   scale_color_manual(values=batch.cols) +
   facet_grid(Setting ~ Context) +
-  theme_bw(panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+  theme_bw() +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
           strip.background=element_blank(), text=element_text(size=10))
 ```
 
@@ -185,11 +186,11 @@ ggplot(data=merged.longdat, aes(x=Overlap, y=Mean)) +
     geom_hline(aes(yintercept=0), color="black", linetype="dotted") +
     scale_x_continuous(name="Covariate Overlap", trans="log2", 
                        breaks=c(0.01, 0.1, 1)) +
-    scale_y_continuous(name="|CATE|", limits=c(0, 3.1), expand=c(0, 0)) +
+    scale_y_continuous(name="AATE", limits=c(0, 3.1), expand=c(0, 0)) +
     theme_bw() +
     ggtitle("Performance of batch effect correction techniques on simulated data") +
     facet_grid(True.Effect ~ Experiment) +
     theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-          strip.background=element_blank(), text=element_text(size=10))
+          strip.background=element_blank(), text=element_text(size=13))
 ```
 
