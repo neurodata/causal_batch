@@ -2,7 +2,7 @@ require(ks)
 
 test_that("one-hot encoding works with numeric vector", {
   Ts <- c(1, 1, 0, 0)
-  Ts.ohe <- as.matrix(ohe(Ts))
+  Ts.ohe <- as.matrix(ohe(Ts)$ohe)
   expect_true(all(Ts.ohe[1,] == Ts.ohe[2,]))
   expect_true(all(Ts.ohe[3,] == Ts.ohe[4,]))
   expect_false(all(Ts.ohe[1,] == Ts.ohe[3,]))
@@ -10,7 +10,7 @@ test_that("one-hot encoding works with numeric vector", {
 
 test_that("one-hot encoding works with character vector", {
   Ts <- c("a", "a", "b", "b")
-  Ts.ohe <- as.matrix(ohe(Ts))
+  Ts.ohe <- as.matrix(ohe(Ts)$ohe)
   expect_true(all(Ts.ohe[1,] == Ts.ohe[2,]))
   expect_true(all(Ts.ohe[3,] == Ts.ohe[4,]))
   expect_false(all(Ts.ohe[1,] == Ts.ohe[3,]))
@@ -18,7 +18,7 @@ test_that("one-hot encoding works with character vector", {
 
 test_that("one-hot encoding works with string vector", {
   Ts <- c("aaa", "aaa", "bbb", "bbb")
-  Ts.ohe <- as.matrix(ohe(Ts))
+  Ts.ohe <- as.matrix(ohe(Ts)$ohe)
   expect_true(all(Ts.ohe[1,] == Ts.ohe[2,]))
   expect_true(all(Ts.ohe[3,] == Ts.ohe[4,]))
   expect_false(all(Ts.ohe[1,] == Ts.ohe[3,]))
@@ -26,15 +26,28 @@ test_that("one-hot encoding works with string vector", {
 
 test_that("one-hot encoding works with factor vector", {
   Ts <- factor(c("aaa", "aaa", "bbb", "bbb"))
-  Ts.ohe <- as.matrix(ohe(Ts))
+  Ts.ohe <- as.matrix(ohe(Ts)$ohe)
   expect_true(all(Ts.ohe[1,] == Ts.ohe[2,]))
   expect_true(all(Ts.ohe[3,] == Ts.ohe[4,]))
   expect_false(all(Ts.ohe[1,] == Ts.ohe[3,]))
 })
 
+test_that("one-hot encoding encodes new vectors the same", {
+  Ts <- factor(c("bbb", "bbb", "aaa", "aaa"), levels=c("bbb", "aaa"))
+  ohe_res <- ohe(Ts)
+  Ts1.ohe <- as.matrix(ohe_res$ohe)
+  
+  Ts_2 <- c("aaa", "aaa", "bbb", "bbb")
+  Ts2.ohe <- as.matrix(ohe(Ts_2, levels=ohe_res$Levels)$ohe)
+  expect_true(all(Ts2.ohe[3,] == Ts1.ohe[1,]))
+  expect_true(all(Ts2.ohe[3,] == Ts2.ohe[4,]))
+  expect_true(all(Ts2.ohe[1,] == Ts1.ohe[3,]))
+  expect_true(all(Ts2.ohe[1,] == Ts2.ohe[2,]))
+})
+
 test_that("zero-one distance computation works", {
   Ts <- c(1, 1, 0, 0)
-  DT <- as.matrix(zero_one_dist(Ts))
+  DT <- as.matrix(zero_one_dist(Ts)$DT)
   expect_true(all(DT[1:2, 1:2] == 0))
   expect_true(all(DT[3:4, 3:4] == 0))
   expect_true(all(DT[1:2, 3:4] == 1))
@@ -43,7 +56,7 @@ test_that("zero-one distance computation works", {
 
 test_that("zero-one distance computation works with arbitrary ordering and string", {
   Ts <- c("aaa", "bbb", "aaa", "bbb", "ccc")
-  DT <- as.matrix(zero_one_dist(Ts))
+  DT <- as.matrix(zero_one_dist(Ts)$DT)
   DT.true <- cbind(c(0, 1, 0, 1, 1), c(1, 0, 1, 0, 1), c(0, 1, 0, 1, 1),
                    c(1, 0, 1, 0, 1), c(1, 1, 1, 1, 0))
   expect_true(all(DT == DT.true))

@@ -32,3 +32,14 @@ test_that("raises error when no samples are retained", {
   expect_error(suppressWarnings(cb.correct.caus_cComBat(sim.low$Ys, sim.low$Ts, data.frame(Covar=sim.low$Xs), 
                                          match.form="Covar", retain.ratio=0.5)))
 })
+
+
+test_that("apply raises error when oos data has inconsistent batches", {
+  sim <- cb.sims.sim_sigmoid(n=200, unbalancedness=1.5)
+  
+  fit_ccombat <- cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs),
+                                         match.form="Covar")
+  
+  Ys <- rbind(sim$Ys, c(1, 0)); Ts <- c(sim$Ts, 2); Xs <- c(sim$Xs, 1)
+  expect_error(cb.correct.apply_cComBat(Ys, Ts, data.frame(Covar=sim$Xs), Model=fit_ccombat$Model))
+})

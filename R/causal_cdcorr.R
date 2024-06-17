@@ -74,13 +74,13 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
   }
   X.tilde <- X.tilde[, !dropped.cols, drop=FALSE]
   
-  DT.tilde <- zero_one_dist(Ts[retain.ids])
+  DT.tilde <- zero_one_dist(Ts[retain.ids])$DT
   
   # run statistical test
   test.out <- cdcov.test(DY.tilde, DT.tilde, X.tilde, num.bootstrap = R,
                          seed=seed, num.threads=num.threads, distance=TRUE)
   return(list(Test=test.out,
-              Retained.Ids=retain.ids)) 
+              Retained.Ids=retain.ids))
 }
 
 #' Vector Matching
@@ -99,6 +99,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @param ddx whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.
+#' @param reference the name of a reference label, against which to align other labels. Defaults to \code{NULL}, which identifies a shared region of covariate overlap across all labels..
 #' @return a \code{[m]} vector containing the indices of samples retained after vector matching.
 #' 
 #' @references Michael J. Lopez, et al. "Estimation of Causal Effects with Multiple Treatments" Statistical Science (2017). 
@@ -114,7 +115,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' cb.align.vm_trim(sim$Ts, sim$Xs)
 #' 
 #' @export
-cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE) {
+cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE, reference=NULL) {
   Xs = as.data.frame(Xs)
   
   # Fitting the Multinomial Logistic Regression Model
@@ -173,28 +174,44 @@ cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE) {
 #' 
 #' @importFrom stats model.matrix
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
-#' @return \code{[n, K]} a one-hot encoding of \code{Ts}.
+#' @param levels optional argument for whether to use pre-specified levels. Defaults to \code{NULL}.
+#' @return a list containing the following:
+#' \itemize{
+#'    \item{\code{ohe}} \code{[n, K]} a one-hot encoding of \code{Ts}.
+#'    \item{\code{Levels}} the levels for the one-hot encoding.
+#' }
 #' @author Eric W. Bridgeford
-ohe <- function(Ts) {
+#' @noRd
+ohe <- function(Ts, levels=NULL) {
   # Convert input vector to a factor
-  Ts_fact <- factor(Ts)
+  if (!is.null(levels)) {
+    Ts_fact <- factor(Ts, levels=levels)
+  } else {
+    Ts_fact <- factor(Ts)
+  }
   
   # Perform one-hot encoding using model.matrix
   encoded_matrix <- model.matrix(~Ts_fact - 1)
   
   # Convert the matrix to a data frame (optional)
   Ts_ohe <- as.data.frame(encoded_matrix)
-  return(Ts_ohe)
+  return(list(ohe=Ts_ohe, Levels=levels(Ts_fact)))
 }
 
 #' A utility to compute the zero-one distances for a treatment vector.
 #' 
 #' @importFrom stats dist
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
-#' @return \code{[n, n]} the pairwise zero-one distance matrix.
+#' @param levels optional argument for whether to use pre-specified levels. Defaults to \code{NULL}.
+#' @return a list containing the following:
+#' \itemize{
+#'    \item{\code{DT}} \code{[n, n]} the pairwise zero-one distance matrix.
+#'    \item{\code{Levels}} the levels for the one-hot encoding.
+#' }
 #' @author Eric W. Bridgeford
-zero_one_dist <- function(Ts) {
-  Ts_ohe <- ohe(Ts)
+#' @noRd
+zero_one_dist <- function(Ts, levels=NULL) {
+  Ts_ohe <- ohe(Ts, levels=levels)
   
-  return(dist(Ts_ohe)/sqrt(2))
+  return(list(DT=dist(Ts_ohe$ohe)/sqrt(2), Levels=Ts_ohe$levels))
 }

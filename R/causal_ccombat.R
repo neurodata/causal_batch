@@ -17,13 +17,17 @@
 #' @param reference the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
+#' @param apply.oos whether to apply batch effect correction to all samples within range of covariate overlap across the different batches. Defaults to \code{FALSE}. 
 #' @return a list, containing the following:
 #' \itemize{
 #'    \item{\code{Ys.corrected}} an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.
 #'    \item{\code{Ts}} \code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.
 #'    \item{\code{Xs}} the \code{r} covariates/confounding variables for each of the \code{m} retained samples.
-#'    \item{\code{Retained.Ids}} a \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
+#'    \item{\code{Model}} the fit batch effect correction model. See \code{\link[sva]{ComBat}} for details.
+#'    \item{\code{InSample.Ids}} the ids which were used to fit the batch effect correction model.
+#'    \item{\code{Corrected.Ids}} the ids to which batch effect correction was applied. Differs from \code{InSample.Ids} if \code{apply.oos} is \code{TRUE}.
 #' }
+#' @param apply.oos A boolean that indicates whether or not to apply the learned batch effect correction to non-matched samples that are still within a region of covariate support. Defaults to \code{FALSE}.
 #' 
 #' @author Eric W. Bridgeford
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
@@ -40,17 +44,34 @@
 #' cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
-cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1), retain.ratio=0.05) {
-  retain.ids <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, match.args=match.args, retain.ratio=retain.ratio)))
+cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1),
+                                    retain.ratio=0.05, apply.oos=FALSE) {
+  match_obj <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, 
+                                                         match.args=match.args, retain.ratio=retain.ratio)))
+  is.ids <- match_obj$Retained.Ids
   
-  Y.tilde <- Ys[retain.ids,,drop=FALSE]; X.tilde <- Xs[retain.ids,,drop=FALSE]; T.tilde <- Ts[retain.ids]
+  Y.tilde <- Ys[is.ids,,drop=FALSE]; X.tilde <- Xs[is.ids,,drop=FALSE]; T.tilde <- Ts[is.ids]
   
   mod <- model.matrix(as.formula(sprintf("~%s", match.form)), data=X.tilde)
-  dat.norm <- t(ComBat(t(Y.tilde), T.tilde, mod = mod))
+  fit_obj <- cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod)
+  fit_obj$Model$Covar.Mod <- match.form
+  fit_obj$Model$Reference <- match_obj$Reference
+  
+  if (apply.oos) {
+    oos.ids <- unique(do.call(cb.align.vm_trim, list(Ts, Xs, retain.ratio=retain.ratio)))
+    retain.ids <- unique(c(is.ids, oos.ids))
+    dat.norm <- cb.correct.apply_cComBat(Ys[retain.ids,,drop=FALSE], Ts[retain.ids], Xs[retain.ids,,drop=FALSE], 
+                                         fit_obj$Model)
+  } else {
+    dat.norm <- fit_obj$Corrected
+    retain.ids <- is.ids
+  }
   return(list(Ys.corrected=dat.norm,
-              Ts=T.tilde,
-              Xs=X.tilde,
-              Retained.Ids=retain.ids))
+              Ts=Ts[retain.ids],
+              Xs=Xs[retain.ids,,drop=FALSE],
+              Model=fit_obj$Model,
+              InSample.Ids=is.ids,
+              Corrected.Ids=retain.ids))
 }
 
 #' K-Way matching
@@ -64,7 +85,11 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, matc
 #' @param reference the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
-#' @return an \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
+#' @return a list, containing the following:
+#' \itemize{
+#'    \item{\code{Retained.Ids}} \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
+#'    \item{\code{Reference}} the reference batch.
+#' }
 #' 
 #' @section Details:
 #' For more details see the help vignette:
@@ -114,7 +139,7 @@ cb.align.kway_match <- function(Ts, Xs, match.form, reference=NULL, match.args=l
     stop("No samples retained by vector matching.")
   }
   
-  return(retain.ids)
+  return(list(Retained.Ids=retain.ids, Reference=tx.batch))
 }
 
 #' Pairwise covariate matching
@@ -133,6 +158,7 @@ cb.align.kway_match <- function(Ts, Xs, match.form, reference=NULL, match.args=l
 #'    \item{\code{I.mat.k}} index matrix of control samples that have a match.
 #'    \item{\code{M.mat.k}} match matrix of treatment samples that are correspondingly matched to a control.
 #' }
+#' @noRd
 covariate.match <- function(covar.tx, covar.cont, match.form, match.args=NULL) {
   n.kprime <- dim(covar.tx)[1]; n.k <- dim(covar.cont)[1]
   n.matches <- max(1, floor(n.k/n.kprime))

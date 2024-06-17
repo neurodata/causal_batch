@@ -27,7 +27,11 @@ cb.align.kway_match(
 \item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 }
 \value{
-an \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
+a list, containing the following:
+\itemize{
+   \item{\code{Retained.Ids}} \code{[m]} vector consisting of the sample ids of the \code{n} original samples that were retained after matching.
+   \item{\code{Reference}} the reference batch.
+}
 }
 \description{
 A function for performing k-way matching using the matchIt package. Looks for samples which have corresponding matches across all other treatment levels.

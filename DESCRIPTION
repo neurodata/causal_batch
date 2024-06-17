@@ -1,8 +1,8 @@
 Package: causalBatch
 Type: Package
 Title: Causal Batch Effects
-Version: 1.2.0
-Date: 2024-03-01
+Version: 1.3.0
+Date: 2024-06-16
 Authors@R: 
   c(person(given="Eric W.", family="Bridgeford", role=c("aut", "cre"),
     email="ericwb95@gmail.com"),
@@ -21,13 +21,17 @@ Imports:
   MatchIt,
   nnet,
   dplyr,
-  magrittr
+  magrittr,
+  genefilter,
+  BiocParallel,
+  utils
 URL:
   https://github.com/neurodata/causal_batch
 Encoding: UTF-8
 VignetteBuilder: knitr
 Suggests:
     tidyr,
+    ggpubr,
     knitr,
     rmarkdown,
     parallel,

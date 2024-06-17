@@ -4,7 +4,7 @@
 \alias{cb.align.vm_trim}
 \title{Vector Matching}
 \usage{
-cb.align.vm_trim(Ts, Xs, retain.ratio = 0.05, ddx = FALSE)
+cb.align.vm_trim(Ts, Xs, retain.ratio = 0.05, ddx = FALSE, reference = NULL)
 }
 \arguments{
 \item{Ts}{\code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.}
@@ -14,6 +14,8 @@ cb.align.vm_trim(Ts, Xs, retain.ratio = 0.05, ddx = FALSE)
 \item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 
 \item{ddx}{whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.}
+
+\item{reference}{the name of a reference label, against which to align other labels. Defaults to \code{NULL}, which identifies a shared region of covariate overlap across all labels..}
 }
 \value{
 a \code{[m]} vector containing the indices of samples retained after vector matching.
