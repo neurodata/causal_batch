@@ -46,14 +46,14 @@
 #' @export
 cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1),
                                     retain.ratio=0.05, apply.oos=FALSE) {
-  match_obj <- unique(do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, 
-                                                         match.args=match.args, retain.ratio=retain.ratio)))
-  is.ids <- match_obj$Retained.Ids
+  match_obj <- do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, 
+                                                         match.args=match.args, retain.ratio=retain.ratio))
+  is.ids <- unique(match_obj$Retained.Ids)
   
   Y.tilde <- Ys[is.ids,,drop=FALSE]; X.tilde <- Xs[is.ids,,drop=FALSE]; T.tilde <- Ts[is.ids]
   
   mod <- model.matrix(as.formula(sprintf("~%s", match.form)), data=X.tilde)
-  fit_obj <- cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod)
+  fit_obj <- causalBatch:::cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod)
   fit_obj$Model$Covar.Mod <- match.form
   fit_obj$Model$Reference <- match_obj$Reference
   
@@ -70,6 +70,7 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, matc
               Ts=Ts[retain.ids],
               Xs=Xs[retain.ids,,drop=FALSE],
               Model=fit_obj$Model,
+              Reference=match_obj$Reference,
               InSample.Ids=is.ids,
               Corrected.Ids=retain.ids))
 }

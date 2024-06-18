@@ -70,7 +70,7 @@ Conceptually, $K$-way matching can be thought of as a way to directly include/ex
 
 ```{r, fig.width=5, fig.height=3}
 kway.retained <- cb.align.kway_match(sim.low$Ts, data.frame(Covar=sim.low$Xs),
-                                   match.form="Covar")
+                                   match.form="Covar")$Retained.Ids
 plot.covars(sim.low$Xs[kway.retained], sim.low$Ts[kway.retained],
             title="Sample covariate values (after K-way matching)")
 ```
