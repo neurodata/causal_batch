@@ -337,7 +337,7 @@ it.sol <- utils::getFromNamespace("it.sol", "sva")
 #'    \item{\code{Levels}} the order of levels for each batch
 #'    \item{\code{Covar.Mod}} the covariate model for adjustment
 #' }
-#' This model is output after fitting with \code{\link{cb.correct.caus_cComBat}}.
+#' This model is output after fitting with \code{\link{cb.correct.matching_cComBat}}.
 #' 
 #' @return an \code{[n, d]} matrix, the batch-effect corrected data.
 #'
@@ -350,7 +350,7 @@ it.sol <- utils::getFromNamespace("it.sol", "sva")
 #' library(causalBatch)
 #' sim <- cb.sims.sim_linear(a=-1, n=200, err=1/8, unbalancedness=3)
 #' # fit batch effect correction for first 100 samples
-#' cb.fit <- cb.correct.caus_cComBat(sim$Ys[1:100,,drop=FALSE], sim$Ts[1:100], 
+#' cb.fit <- cb.correct.matching_cComBat(sim$Ys[1:100,,drop=FALSE], sim$Ts[1:100], 
 #'                                   data.frame(Covar=sim$Xs[1:100,,drop=FALSE]), "Covar")
 #' # apply to all samples
 #' cor.dat <- cb.correct.apply_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), cb.fit$Model)

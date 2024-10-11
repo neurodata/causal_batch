@@ -1,10 +1,10 @@
-#' Causal Conditional ComBat
+#' Matching Conditional ComBat
 #' 
-#' A function for implementing the causal conditional ComBat (causal cComBat) algorithm.
+#' A function for implementing the matching conditional ComBat (matching cComBat) algorithm.
 #' This algorithm allows users to remove batch effects (in each dimension), while adjusting for known confounding
 #' variables. It is imperative that this function is used in conjunction with domain
-#' expertise (e.g., to ensure that the covariates are not colliders, and that the system satisfies the strong
-#' ignorability condiiton) to derive causal conclusions. See citation for more details as to the conditions
+#' expertise (e.g., to ensure that the covariates are not colliders, and that the system could be argued to satisfy the
+#' ignorability condition) to derive causal conclusions. See citation for more details as to the conditions
 #' under which conclusions derived are causal.
 #' 
 #' @importFrom sva ComBat
@@ -14,6 +14,7 @@
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
+#' @param covar.out.form A covariate model, given as a formula. Applies for the outcome regression step of the \code{ComBat} algorithm. Defaults to \code{NULL}, which re-uses \code{match.form} for the covariate/outcome model.
 #' @param reference the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
@@ -41,10 +42,10 @@
 #' @examples
 #' library(causalBatch)
 #' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
-#' cb.correct.caus_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
+#' cb.correct.matching_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
-cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1),
+cb.correct.matching_cComBat <- function(Ys, Ts, Xs, match.form, covar.out.form=NULL, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1),
                                     retain.ratio=0.05, apply.oos=FALSE) {
   match_obj <- do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, 
                                                          match.args=match.args, retain.ratio=retain.ratio))
@@ -52,7 +53,10 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, matc
   
   Y.tilde <- Ys[is.ids,,drop=FALSE]; X.tilde <- Xs[is.ids,,drop=FALSE]; T.tilde <- Ts[is.ids]
   
-  mod <- model.matrix(as.formula(sprintf("~%s", match.form)), data=X.tilde)
+  if (is.null(covar.out.form)) {
+    covar.out.form <- match.form
+  }
+  mod <- model.matrix(as.formula(sprintf("~%s", covar.out.form)), data=X.tilde)
   fit_obj <- causalBatch:::cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod)
   fit_obj$Model$Covar.Mod <- match.form
   fit_obj$Model$Reference <- match_obj$Reference
@@ -74,6 +78,77 @@ cb.correct.caus_cComBat <- function(Ys, Ts, Xs, match.form, reference=NULL, matc
               InSample.Ids=is.ids,
               Corrected.Ids=retain.ids))
 }
+
+#' Augmented Inverse Probability Weighting Conditional ComBat
+#' 
+#' A function for implementing the AIPW conditional ComBat (AIPW cComBat) algorithm.
+#' This algorithm allows users to remove batch effects (in each dimension), while adjusting for known confounding
+#' variables. It is imperative that this function is used in conjunction with domain
+#' expertise (e.g., to ensure that the covariates are not colliders, and that the system could be argued to satisfy the
+#' ignorability condition) to derive causal conclusions. See citation for more details as to the conditions
+#' under which conclusions derived are causal.
+#' 
+#' Note: This function is experimental, and has not been tested on real data. It has only been tested with simulated data with binary (0 or 1) exposures.
+#' 
+#' @importFrom stats model.matrix
+#' @importFrom stats as.formula
+#' @param Ys an \code{[n, d]} matrix, for the outcome variables with \code{n} samples in \code{d} dimensions.
+#' @param Ts \code{[n]} the labels of the samples, with at most two unique batches.
+#' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
+#' @param aipw.form A covariate model, given as a formula. Applies for the estimation of propensities for the AIPW step.
+#' @param covar.out.form A covariate model, given as a formula. Applies for the outcome regression step of the \code{ComBat} algorithm. Defaults to \code{NULL}, which re-uses \code{aipw.form} for the covariate/outcome model.
+#' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
+#' @return a list, containing the following:
+#' \itemize{
+#'    \item{\code{Ys.corrected}} an \code{[m, d]} matrix, for the \code{m} retained samples in \code{d} dimensions, after correction.
+#'    \item{\code{Ts}} \code{[m]} the labels of the \code{m} retained samples, with \code{K < n} levels.
+#'    \item{\code{Xs}} the \code{r} covariates/confounding variables for each of the \code{m} retained samples.
+#'    \item{\code{Model}} the fit batch effect correction model.
+#'    \item{\code{Corrected.Ids}} the ids to which batch effect correction was applied.
+#' }
+#' @param apply.oos A boolean that indicates whether or not to apply the learned batch effect correction to non-matched samples that are still within a region of covariate support. Defaults to \code{FALSE}.
+#' 
+#' @author Eric W. Bridgeford
+#' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
+#' @references Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011). 
+#' @references W Evan Johnson, et al. "Adjusting batch effects in microarray expression data using empirical Bayes methods" Biostatistics (2007). 
+#' 
+#' @section Details:
+#' For more details see the help vignette:
+#' \code{vignette("causal_ccombat", package = "causalBatch")}
+#' 
+#' @examples
+#' library(causalBatch)
+#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+#' cb.correct.aipw_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
+#' 
+#' @export
+cb.correct.aipw_cComBat <- function(Ys, Ts, Xs, aipw.form, covar.out.form=NULL, reference=NULL, retain.ratio=0.05) {
+  # Ensure Ts is a factor
+  Ts <- as.factor(Ts)
+  
+  # Perform propensity trimming
+  is.ids <- unique(do.call(cb.align.vm_trim, list(Ts, Xs, retain.ratio=retain.ratio, prop.form=aipw.form)))
+  
+  Y.tilde <- Ys[is.ids, , drop=FALSE]
+  X.tilde <- Xs[is.ids, , drop=FALSE]
+  T.tilde <- Ts[is.ids]
+  
+  if (is.null(covar.out.form)) {
+    covar.out.form <- aipw.form
+  }
+  
+  # Generalized AIPW step
+  aipw_results <- cb.learn.fit_aipw_cComBat(Y.tilde, T.tilde, X.tilde, aipw.form, covar.out.form)
+
+  return(list(Ys.corrected=aipw_results$Corrected,
+              Ts=T.tilde,
+              Xs=X.tilde,
+              Model=aipw_results$Model,
+              Esimates=aipw_results$Estimates,
+              Corrected.Ids=is.ids))
+}
+
 
 #' K-Way matching
 #' 

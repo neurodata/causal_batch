@@ -18,6 +18,7 @@
 #' }
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
+#' @param prop.form a formula specifying a propensity scoring model. Defaults o \code{NULL}, which uses all of the covariates as exposure predictors. 
 #' @param R the number of repetitions for permutation testing. Defaults to \code{1000}.
 #' @param dist.method the method used for computing distance matrices. Defaults to \code{"euclidean"}. Other options
 #' can be identified by seeing the appropriate documention for the \code{method} argument for the \code{\link[stats]{dist}} function.
@@ -49,13 +50,13 @@
 #' cb.detect.caus_cdcorr(sim$Ys, sim$Ts, sim$Xs)
 #' 
 #' @export
-cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1,
+cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, prop.form=NULL, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1,
                                   retain.ratio=0.05, ddx=FALSE) {
   Xs <- as.data.frame(Xs)
   
   # vector match for propensity trimming, and then reduce sub-sample to the
   # propensity matched subset
-  retain.ids <- cb.align.vm_trim(Ts, Xs, retain.ratio=retain.ratio, ddx=ddx)
+  retain.ids <- cb.align.vm_trim(Ts, Xs, prop.form=prop.form, retain.ratio=retain.ratio, ddx=ddx)
   if (length(retain.ids) == 0) {
     stop("No samples remain after balancing.")
   }
@@ -97,6 +98,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' 
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
+#' @param prop.form a formula specifying a propensity scoring model. Defaults o \code{NULL}, which uses all of the covariates as exposure predictors. 
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @param ddx whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.
 #' @param reference the name of a reference label, against which to align other labels. Defaults to \code{NULL}, which identifies a shared region of covariate overlap across all labels..
@@ -115,7 +117,7 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", d
 #' cb.align.vm_trim(sim$Ts, sim$Xs)
 #' 
 #' @export
-cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE, reference=NULL) {
+cb.align.vm_trim <- function(Ts, Xs, prop.form=NULL, retain.ratio=0.05, ddx=FALSE, reference=NULL) {
   Xs = as.data.frame(Xs)
   
   # Fitting the Multinomial Logistic Regression Model
@@ -123,10 +125,23 @@ cb.align.vm_trim <- function(Ts, Xs, retain.ratio=0.05, ddx=FALSE, reference=NUL
   Ts <- as.numeric(factor(Ts, levels=unique(Ts)))
   Ts_unique = unique(Ts)
   
-  m <- multinom(factor(Ts) ~ ., data = as.data.frame(Xs), trace=ddx)
+  # Create the right-hand side of the formula based on prop_formula or default to all variables
+  if (is.null(prop.form)) {
+    rhs_formula <- paste(names(Xs), collapse = " + ")
+  } else {
+    rhs_formula <- paste(prop.form)
+  }
+  
+  # Create the full formula
+  full_formula <- as.formula(paste("factor(Ts) ~", rhs_formula))
+  
+  # Combine Ts and Xs for the model fitting
+  model_data <- cbind(Ts = Ts, Xs)
+  
+  m <- multinom(full_formula, data = model_data, trace=ddx)
   
   # Making predictions using the fitted model
-  pred <- predict(m, newdata = as.data.frame(Xs), type = "probs")
+  pred <- predict(m, newdata = Xs, type = "probs")
   
   # if only binary treatment levels, add a column for the reference
   if (K == 2) {

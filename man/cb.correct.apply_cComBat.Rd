@@ -23,7 +23,7 @@ cb.correct.apply_cComBat(Ys, Ts, Xs, Model)
    \item{\code{Levels}} the order of levels for each batch
    \item{\code{Covar.Mod}} the covariate model for adjustment
 }
-This model is output after fitting with \code{\link{cb.correct.caus_cComBat}}.}
+This model is output after fitting with \code{\link{cb.correct.matching_cComBat}}.}
 }
 \value{
 an \code{[n, d]} matrix, the batch-effect corrected data.
@@ -35,14 +35,13 @@ batch effects.  Users are returned an expression matrix that has been corrected 
 data are assumed to be cleaned and normalized before batch effect removal.
 }
 \details{
-Note: this code is taken directly from the \code{\link[sva]{ComBat}} algorithm featured in the `sva` package.
+Note: this code is adapted directly from the \code{\link[sva]{ComBat}} algorithm featured in the `sva` package.
 }
 \examples{
-
 library(causalBatch)
 sim <- cb.sims.sim_linear(a=-1, n=200, err=1/8, unbalancedness=3)
 # fit batch effect correction for first 100 samples
-cb.fit <- cb.correct.caus_cComBat(sim$Ys[1:100,,drop=FALSE], sim$Ts[1:100], 
+cb.fit <- cb.correct.matching_cComBat(sim$Ys[1:100,,drop=FALSE], sim$Ts[1:100], 
                                   data.frame(Covar=sim$Xs[1:100,,drop=FALSE]), "Covar")
 # apply to all samples
 cor.dat <- cb.correct.apply_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), cb.fit$Model)

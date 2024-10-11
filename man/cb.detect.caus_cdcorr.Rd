@@ -8,6 +8,7 @@ cb.detect.caus_cdcorr(
   Ys,
   Ts,
   Xs,
+  prop.form = NULL,
   R = 1000,
   dist.method = "euclidean",
   distance = FALSE,
@@ -27,6 +28,8 @@ cb.detect.caus_cdcorr(
 \item{Ts}{\code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.}
 
 \item{Xs}{\code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.}
+
+\item{prop.form}{a formula specifying a propensity scoring model. Defaults o \code{NULL}, which uses all of the covariates as exposure predictors.}
 
 \item{R}{the number of repetitions for permutation testing. Defaults to \code{1000}.}
 

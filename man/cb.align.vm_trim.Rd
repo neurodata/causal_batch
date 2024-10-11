@@ -4,12 +4,21 @@
 \alias{cb.align.vm_trim}
 \title{Vector Matching}
 \usage{
-cb.align.vm_trim(Ts, Xs, retain.ratio = 0.05, ddx = FALSE, reference = NULL)
+cb.align.vm_trim(
+  Ts,
+  Xs,
+  prop.form = NULL,
+  retain.ratio = 0.05,
+  ddx = FALSE,
+  reference = NULL
+)
 }
 \arguments{
 \item{Ts}{\code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.}
 
 \item{Xs}{\code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.}
+
+\item{prop.form}{a formula specifying a propensity scoring model. Defaults o \code{NULL}, which uses all of the covariates as exposure predictors.}
 
 \item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 

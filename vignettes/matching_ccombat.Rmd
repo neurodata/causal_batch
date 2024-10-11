@@ -1,10 +1,10 @@
 ---
-title: "Causal Conditional ComBat"
+title: "Matching Conditional ComBat"
 author: "Eric W. Bridgeford"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{cb.correct.causal_ccombat}
+  %\VignetteIndexEntry{cb.correct.matching_ccombat}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -59,6 +59,7 @@ sim.simpl = cb.sims.sim_sigmoid(n=n, eff_sz=1, unbalancedness=1.5)
 
 plot.sim(sim.simpl$Ys, sim.simpl$Ts, sim.simpl$Xs, title="Sigmoidal Simulation")
 ```
+
 It looks like the red group/batch tends to have outcomes exceeding the blue group/batch. We can test whether a group/batch effect can be detected. See the vignette on causal conditional distance correlation for more details, found at:
 
 ```{r, eval=FALSE}
@@ -75,16 +76,16 @@ print(sprintf("p-value: %.4f", result$Test$p.value))
 Since the $p$-value is $< \alpha$, this indicates that the data provide evidence to reject the null hypothesis in favor of the alternative (there is a causal group/batch effect). Next, we can correct for this effect using causal conditional ComBat. Note in particular that the covariates should be passed as a named data frame:
 
 ```{r}
-cor.sim.simpl <- cb.correct.caus_cComBat(sim.simpl$Ys, sim.simpl$Ts, 
+cor.sim.simpl <- cb.correct.matching_cComBat(sim.simpl$Ys, sim.simpl$Ts, 
                                          data.frame(Covar=sim.simpl$Xs),
                                          match.form="Covar")
 ```
 
-We can plot the augmented data after causal conditional ComBat has been applied, like so:
+We can plot the augmented data after matching conditional ComBat has been applied, like so:
 
 ```{r, fig.width=5, fig.height=3}
 plot.sim(cor.sim.simpl$Ys.corrected, cor.sim.simpl$Ts, cor.sim.simpl$Xs$Covar,
-         title="Sigmoidal Simulation (causal cComBat corrected)")
+         title="Sigmoidal Simulation (matching cComBat corrected)")
 ```
 
 We can see that the augmented data nearly perfectly overlaps across the two groups/batches, which can be confirmed using the causal conditional distance correlation:
@@ -95,7 +96,7 @@ result.cor <- cb.detect.caus_cdcorr(cor.sim.simpl$Ys.corrected, cor.sim.simpl$Ts
 print(sprintf("p-value: %.4f", result.cor$Test$p.value))
 ```
 
-Since the $p$-value is $> \alpha$, the data provide no evidence to reject the null hypothesis (that there is a causal group/batch effect) in favor of the alternative. Stated another way, the group/batch effect that was present before causal conditional ComBat correction is no longer detectable.
+Since the $p$-value is $> \alpha$, the data provide no evidence to reject the null hypothesis (that there is a causal group/batch effect) in favor of the alternative. Stated another way, the group/batch effect that was present before matching conditional ComBat correction is no longer detectable.
 
 If we have multiple covariate values, you can specify custom formulas for the matching process using the standard R formula notation. For instance, if we had a second covariate value:
 
@@ -106,7 +107,7 @@ Xs.2covar <- data.frame(Covar1=sim.simpl$Xs, Covar2=runif(n))
 You could specify a formula instead like this:
 
 ```{r}
-cor.sim <- cb.correct.caus_cComBat(sim.simpl$Ys, sim.simpl$Ts, Xs.2covar, 
+cor.sim <- cb.correct.matching_cComBat(sim.simpl$Ys, sim.simpl$Ts, Xs.2covar, 
                                    match.form="Covar1 + Covar2")
 ```
 
@@ -122,12 +123,12 @@ If we wanted to leverage exact matching for the categorical covariate, we could 
 ```{r}
 match.args <- list(method="nearest", exact="Cat.Covar", replace=FALSE, 
                    caliper=0.1)
-cor.sim <- cb.correct.caus_cComBat(sim.simpl$Ys, sim.simpl$Ts, Xs.3covar, 
+cor.sim <- cb.correct.matching_cComBat(sim.simpl$Ys, sim.simpl$Ts, Xs.3covar, 
                                    match.form="Covar1 + Covar2 + Cat.Covar",
                                    match.args=match.args)
 ```
 
-# Applying Causal ComBat to out-of-sample data
+# Applying Matching cComBat to out-of-sample data
 
 Intuitively, the causal pre-processing procedures (including propensity trimming and matching) provide a form of bias mitigation from certain covariates, similar to biases due to model misspecifications, when these covariates are asymmetrically distributed across batches. These steps can be visualized by comparing the covariate distributions before and after batch effect correction; e.g., via a histogram:
 
@@ -160,21 +161,21 @@ ggarrange(plot.covars(sim.simpl$Ts, sim.simpl$Xs, title="(A) Unfiltered samples"
 
 Note that the number of samples retained (the sum of the counts) is much lower after matching and trimming.
 
-Batch effect corrections learned via `cb.correct.caus_cComBat()` are reasonably interpretable for samples within a range of covariate overlap across the batches included in the correction, which is more general than a fully matching subset (used for the estimation procedure). This means that it may be reasonable to apply learned corrections to certain out-of-sample data which have similar covariates to the included samples, even if these samples are not part of the fully matched subset used directly for estimation of the batch effect correction model. To do so, we can use the `apply.oos` argument, which has the effect of learning batch effects from a fully matched subset of points, and then applying the learned batch effects to a less stringent covariate-overlapping subset of samples. This therefore has the effect of learning the batch effect correction from a subset of samples chosen to reduce bias, and then applies it to a wider subset of samples which are similar to the samples used for bias reduction.
+Batch effect corrections learned via `cb.correct.matching_cComBat()` are reasonably interpretable for samples within a range of covariate overlap across the batches included in the correction, which is more general than a fully matching subset (used for the estimation procedure). This means that it may be reasonable to apply learned corrections to certain out-of-sample data which have similar covariates to the included samples, even if these samples are not part of the fully matched subset used directly for estimation of the batch effect correction model. To do so, we can use the `apply.oos` argument, which has the effect of learning batch effects from a fully matched subset of points, and then applying the learned batch effects to a less stringent covariate-overlapping subset of samples. This therefore has the effect of learning the batch effect correction from a subset of samples chosen to reduce bias, and then applies it to a wider subset of samples which are similar to the samples used for bias reduction.
 
 ```{r, fig.width=5, fig.height=4.5}
-cor.sim.oos <- cb.correct.caus_cComBat(sim.simpl$Ys, sim.simpl$Ts, data.frame(Covar=sim.simpl$Xs), 
+cor.sim.oos <- cb.correct.matching_cComBat(sim.simpl$Ys, sim.simpl$Ts, data.frame(Covar=sim.simpl$Xs), 
                                        match.form="Covar", apply.oos=TRUE)
 
 ggarrange(plot.covars(cor.sim.oos$Ts, cor.sim.oos$Xs$Covar, 
                       title="(A) In- and out-of-sample data"),
           plot.sim(cor.sim.oos$Ys.corrected, cor.sim.oos$Ts, cor.sim.oos$Xs$Covar,
-                   title="(B) causal cComBat on in- and out-of-sample data"),
+                   title="(B) matching cComBat on in- and out-of-sample data"),
           nrow=2)
 
 ```
 
-This applies causal cComBat to the in-sample points (the fully matching subset across all batches, all of whom together are chosen such that the batches are covariate balanced, or the covariate distributions are rendered approximately equal, across batches) as well as out-of-sample points (data from individual batches who fall within a range of covariate overlap across all batches).
+This applies matching cComBat to the in-sample points (the fully matching subset across all batches, all of whom together are chosen such that the batches are covariate balanced, or the covariate distributions are rendered approximately equal, across batches) as well as out-of-sample points (data from individual batches who fall within a range of covariate overlap across all batches).
 
 This behavior can be tuned directly via the `cb.correct.apply_cComBat()` function. We caution individuals from using this function directly without performing steps to ensure that the subset of samples the batch effect correction is learned from and the subset of samples to whom the batch effect correction are applied have similar covariate ranges. The code below computes the points within a range of covariate overlap across all batches using vertex matching.
 
@@ -186,5 +187,5 @@ Xs.oos <- sim.simpl$Xs[oos.ids,,drop=FALSE]
 Ys.oos.cor <- cb.correct.apply_cComBat(Ys.oos, Ts.oos, data.frame(Covar=Xs.oos),
                                        cor.sim.oos$Model)
 
-plot.sim(Ys.oos.cor, Ts.oos, Xs.oos, title=" causal cComBat applied to OOS data")
+plot.sim(Ys.oos.cor, Ts.oos, Xs.oos, title=" matching cComBat applied to OOS data")
 ```

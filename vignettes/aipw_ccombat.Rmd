@@ -1,0 +1,121 @@
+---
+title: "AIPW Conditional ComBat"
+author: "Eric W. Bridgeford"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cb.correct.aipw_ccombat}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE}
+require(causalBatch)
+require(ggplot2)
+require(ggpubr)
+require(tidyr)
+n = 200
+```
+
+NOTE: The AIPW Conditional ComBat algorithm is experimental, and has not been tested beyond simulation environments. Proceed with caution before implementing with your data.
+
+To start, we will begin with a simulation example, similar to the ones we were working in for the simulations, which you can access from:
+
+```{r, eval=FALSE}
+vignette("cb.simulations", package="causalBatch")
+```
+
+Let's regenerate our working example data with some plotting code:
+
+```{r}
+# a function for plotting a scatter plot of the data
+plot.sim <- function(Ys, Ts, Xs, title="", 
+                     xlabel="Covariate",
+                     ylabel="Outcome (1st dimension)") {
+  data = data.frame(Y1=Ys[,1], Y2=Ys[,2], 
+                    Group=factor(Ts, levels=c(0, 1), ordered=TRUE), 
+                    Covariates=Xs)
+  
+  data %>%
+    ggplot(aes(x=Covariates, y=Y1, color=Group)) +
+    geom_point() +
+    labs(title=title, x=xlabel, y=ylabel) +
+    scale_x_continuous(limits = c(-1, 1)) +
+    scale_color_manual(values=c(`0`="#bb0000", `1`="#0000bb"), 
+                       name="Group/Batch") +
+    theme_bw()
+}
+```
+
+Next, we will generate a simulation:
+
+```{r, fig.width=5, fig.height=3}
+sim.simpl = cb.sims.sim_sigmoid(n=n, eff_sz=1, unbalancedness=1.5)
+
+plot.sim(sim.simpl$Ys, sim.simpl$Ts, sim.simpl$Xs, title="Sigmoidal Simulation")
+```
+
+It looks like the red group/batch tends to have outcomes exceeding the blue group/batch. We can test whether a group/batch effect can be detected. See the vignette on causal conditional distance correlation for more details, found at:
+
+```{r, eval=FALSE}
+vignette("cb.detect.caus_cdcorr", package="causalBatch")
+```
+
+Now to run the test and evaluate with $\alpha = 0.05$:
+
+```{r}
+result <- cb.detect.caus_cdcorr(sim.simpl$Ys, sim.simpl$Ts, sim.simpl$Xs, R=100)
+print(sprintf("p-value: %.4f", result$Test$p.value))
+```
+
+Since the $p$-value is $< \alpha$, this indicates that the data provide evidence to reject the null hypothesis in favor of the alternative (there is a causal group/batch effect). Next, we can correct for this effect using AIPW conditional ComBat. Note in particular that the covariates should be passed as a named data frame:
+
+```{r}
+cor.sim.simpl <- cb.correct.aipw_cComBat(sim.simpl$Ys, sim.simpl$Ts, 
+                                         data.frame(Covar=sim.simpl$Xs),
+                                         "Covar")
+```
+
+We can plot the augmented data after AIPW conditional ComBat has been applied, like so:
+
+```{r, fig.width=5, fig.height=3}
+plot.sim(cor.sim.simpl$Ys.corrected, cor.sim.simpl$Ts, cor.sim.simpl$Xs$Covar,
+         title="Sigmoidal Simulation (AIPW cComBat corrected)")
+```
+
+We can see that the augmented data nearly perfectly overlaps across the two groups/batches, which can be confirmed using the causal conditional distance correlation:
+
+```{r}
+result.cor <- cb.detect.caus_cdcorr(cor.sim.simpl$Ys.corrected, cor.sim.simpl$Ts,
+                                    cor.sim.simpl$Xs$Covar, R=100)
+print(sprintf("p-value: %.4f", result.cor$Test$p.value))
+```
+
+Since the $p$-value is $> \alpha$, the data provide no evidence to reject the null hypothesis (that there is a causal group/batch effect) in favor of the alternative. Stated another way, the group/batch effect that was present before AIPW conditional ComBat correction is no longer detectable.
+
+If we have multiple covariate values, we can specify custom formulas for the matching process using the standard R formula notation. For instance, if we had a second covariate value:
+
+```{r}
+Xs.2covar <- data.frame(Covar1=sim.simpl$Xs, Covar2=runif(n))
+```
+
+You could specify a formula instead like this:
+
+```{r}
+cor.sim <- cb.correct.aipw_cComBat(sim.simpl$Ys, sim.simpl$Ts, Xs.2covar, 
+                                   "Covar1 + Covar2")
+```
+
+If you wanted to specify a separate propensity model for AIPW and covariate/outcome model, you could do so like this:
+
+```{r}
+cor.sim <- cb.correct.aipw_cComBat(sim.simpl$Ys, sim.simpl$Ts, Xs.2covar, 
+                                   aipw.form = "Covar1 + Covar2", covar.out.form = "Covar1")
+```
