@@ -15,6 +15,7 @@
 #' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples, as a data frame with named columns.
 #' @param match.form A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.
 #' @param covar.out.form A covariate model, given as a formula. Applies for the outcome regression step of the \code{ComBat} algorithm. Defaults to \code{NULL}, which re-uses \code{match.form} for the covariate/outcome model.
+#' @param prop.form A propensity model, given as a formula. Applies for the estimation of propensities for the propensity trimming step. Defaults to \code{NULL}, which re-uses \code{match.form} for the covariate/outcome model.
 #' @param reference the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.
 #' @param match.args A named list arguments for the \code{\link[MatchIt]{matchit}} function, to be used to specify specific matching strategies, where the list names are arguments and the corresponding values the value to be passed to \code{matchit}. Defaults to inexact nearest-neighbor caliper (width 0.1) matching without replacement.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
@@ -45,37 +46,46 @@
 #' cb.correct.matching_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
-cb.correct.matching_cComBat <- function(Ys, Ts, Xs, match.form, covar.out.form=NULL, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1),
+cb.correct.matching_cComBat <- function(Ys, Ts, Xs, match.form, covar.out.form=NULL, prop.form=NULL, reference=NULL, match.args=list(method="nearest", exact=NULL, replace=FALSE, caliper=.1),
                                     retain.ratio=0.05, apply.oos=FALSE) {
-  match_obj <- do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, 
-                                                         match.args=match.args, retain.ratio=retain.ratio))
-  is.ids <- unique(match_obj$Retained.Ids)
+  if (is.null(prop.form)) {
+    prop.form <- match.form
+  }
+  # Perform propensity trimming
+  is.ids <- unique(do.call(cb.align.vm_trim, list(Ts, Xs, retain.ratio=retain.ratio, prop.form=prop.form)))
+  Ys <- Ys[is.ids, , drop=FALSE]
+  Xs <- Xs[is.ids, , drop=FALSE]
+  Ts <- Ts[is.ids]
   
-  Y.tilde <- Ys[is.ids,,drop=FALSE]; X.tilde <- Xs[is.ids,,drop=FALSE]; T.tilde <- Ts[is.ids]
+  match_obj <- do.call(cb.align.kway_match, list(Ts, Xs, match.form, reference=reference, 
+                                                 match.args=match.args, retain.ratio=retain.ratio))
+  ma.ids <- unique(match_obj$Retained.Ids)
+  
+  Y.tilde <- Ys[ma.ids,,drop=FALSE]; X.tilde <- Xs[ma.ids,,drop=FALSE]; T.tilde <- Ts[ma.ids]
   
   if (is.null(covar.out.form)) {
     covar.out.form <- match.form
   }
   mod <- model.matrix(as.formula(sprintf("~%s", covar.out.form)), data=X.tilde)
-  fit_obj <- causalBatch:::cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod)
+  fit_obj <- causalBatch:::cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod, ref.batch=reference)
   fit_obj$Model$Covar.Mod <- match.form
   fit_obj$Model$Reference <- match_obj$Reference
   
   if (apply.oos) {
-    oos.ids <- unique(do.call(cb.align.vm_trim, list(Ts, Xs, retain.ratio=retain.ratio)))
-    retain.ids <- unique(c(is.ids, oos.ids))
-    dat.norm <- cb.correct.apply_cComBat(Ys[retain.ids,,drop=FALSE], Ts[retain.ids], Xs[retain.ids,,drop=FALSE], 
-                                         fit_obj$Model)
-  } else {
-    dat.norm <- fit_obj$Corrected
+    dat.norm <- cb.correct.apply_cComBat(Ys, Ts, Xs, fit_obj$Model)
     retain.ids <- is.ids
+  } else {
+    dat.norm <- fit_obj$Ys.corrected
+    Xs <- X.tilde; Ts <- T.tilde
+    retain.ids <- is.ids[ma.ids]
   }
+  
   return(list(Ys.corrected=dat.norm,
-              Ts=Ts[retain.ids],
-              Xs=Xs[retain.ids,,drop=FALSE],
+              Ts=Ts,
+              Xs=Xs,
               Model=fit_obj$Model,
               Reference=match_obj$Reference,
-              InSample.Ids=is.ids,
+              InSample.Ids=is.ids[ma.ids],
               Corrected.Ids=retain.ids))
 }
 
@@ -141,7 +151,7 @@ cb.correct.aipw_cComBat <- function(Ys, Ts, Xs, aipw.form, covar.out.form=NULL, 
   # Generalized AIPW step
   aipw_results <- cb.learn.fit_aipw_cComBat(Y.tilde, T.tilde, X.tilde, aipw.form, covar.out.form)
 
-  return(list(Ys.corrected=aipw_results$Corrected,
+  return(list(Ys.corrected=aipw_results$Ys.corrected,
               Ts=T.tilde,
               Xs=X.tilde,
               Model=aipw_results$Model,

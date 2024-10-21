@@ -41,7 +41,6 @@
 #' combat_edata3 = ComBat(dat=edata, batch=batch, mod=mod, par.prior=TRUE, ref.batch=3)
 #'
 #'
-
 ComBat_return_model <- function (dat, batch, mod = NULL, par.prior = TRUE, prior.plots = FALSE, 
           mean.only = FALSE, ref.batch = NULL, BPPARAM = bpparam("SerialParam")) 
 {

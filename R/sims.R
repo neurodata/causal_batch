@@ -25,7 +25,9 @@
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
 #' \item{Ttrue}{an \code{[nbreaks*2,1]} matrix, indicating the group/batch the expected outcomes and covariate breakpoints correspond to.}
 #' \item{Xtrue}{an \code{[nbreaks*2, 1]} matrix, indicating the values of the covariate breakpoints for the theoretical expected outcome in \code{Ytrue}.}
+#' \item{Effect}{The batch effect magnitude.}
 #' \item{Overlap}{the theoretical degree of overlap between the covariate distributions for each of the two groups/batches.}
+#' \item{oracle_fn}{A function for fitting outcomes given covariates.}
 #' 
 #' @section Details:
 #' 
@@ -64,27 +66,26 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
   beta <- alpha*unbalancedness
   xs <- cb.sims.covar_generator(batches, alpha, beta, beta, alpha)
   eps <- err*rnorm(n=n, mean=0, sd=1)
-  ys <- sapply(xs, function(x) {
-    a*sigmoid(b*x)
-  }) + eps - a
+  
+  oracle <- function(x) {
+    sigmoid.xfm(x, a=a, b=b)
+  }
+  ys <- oracle(xs) + eps
   
   xtrue_tmp <- seq(from=-1, to=1, length.out=nbreaks)
   xtrue <- c(xtrue_tmp, xtrue_tmp)
   batch_true <- c(rep(0, nbreaks), rep(1, nbreaks))
-  ytrue <- sapply(xtrue, function(x) {
-    a*sigmoid(b*x) - a
-  })
+  ytrue <- oracle(xtrue)
   
   if (!null) {
     ys <- ys - eff_sz*batches
     ytrue <- ytrue - eff_sz*batch_true
   }
   
-  # ys <- ys * -2*(batches - .5)
-  
   return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
-              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, 
-              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha)))
+              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, Effect=eff_sz,
+              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha),
+              oracle_fn=oracle))
 }
 
 #' Linear Simulation
@@ -114,7 +115,9 @@ cb.sims.sim_sigmoid <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
 #' \item{Ttrue}{an \code{[nbreaks*2,1]} matrix, indicating the group/batch the expected outcomes and covariate breakpoints correspond to.}
 #' \item{Xtrue}{an \code{[nbreaks*2, 1]} matrix, indicating the values of the covariate breakpoints for the theoretical expected outcome in \code{Ytrue}.}
+#' \item{Effect}{The batch effect magnitude.}
 #' \item{Overlap}{the theoretical degree of overlap between the covariate distributions for each of the two groups/batches.}
+#' \item{oracle_fn}{A function for fitting outcomes given covariates.}
 #' 
 #' @section Details:
 #' 
@@ -154,12 +157,16 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1
   xs <- cb.sims.covar_generator(batches, alpha, beta, beta, alpha)
   
   eps <- err*rnorm(n=n, mean=0, sd=1)
-  ys <- a*(xs + b) + eps
+  
+  oracle <- function(xs) {
+    linear.xfm(xs, a=a, b=b)
+  }
+  ys <- oracle(xs) + eps
   
   xtrue_tmp <- seq(from=-1, to=1, length.out=nbreaks)
   xtrue <- c(xtrue_tmp, xtrue_tmp)
   batch_true <- c(rep(0, nbreaks), rep(1, nbreaks))
-  ytrue <- a*(xtrue + b)
+  ytrue <- oracle(xtrue)
   
   if (!null) {
     ys <- ys - eff_sz*batches
@@ -167,8 +174,9 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1
   }
   
   return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
-              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue,  
-              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha)))
+              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, Effect=eff_sz,
+              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha),
+              oracle_fn=oracle))
 }
 
 #' Impulse Simulation
@@ -200,7 +208,9 @@ cb.sims.sim_linear <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=1
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
 #' \item{Ttrue}{an \code{[nbreaks*2,1]} matrix, indicating the group/batch the expected outcomes and covariate breakpoints correspond to.}
 #' \item{Xtrue}{an \code{[nbreaks*2, 1]} matrix, indicating the values of the covariate breakpoints for the theoretical expected outcome in \code{Ytrue}.}
+#' \item{Effect}{The batch effect magnitude.}
 #' \item{Overlap}{the theoretical degree of overlap between the covariate distributions for each of the two groups/batches.}
+#' \item{oracle_fn}{A function for fitting outcomes given covariates.}
 #' 
 #' @section Details:
 #' 
@@ -245,12 +255,16 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
   xs <- cb.sims.covar_generator(batches, alpha, beta, beta, alpha)
   
   eps <- 1/2*rnorm(n=n, mean=0, sd=1)
-  ys <- dnorm(xs, mean=a, sd=b)*c + eps
+  
+  oracle <- function(x) {
+    impulse.xfm(x, a=a, b=b, c=c)
+  }
+  ys <- oracle(xs) + eps
   
   xtrue_tmp <- seq(from=-1, to=1, length.out=nbreaks)
   xtrue <- c(xtrue_tmp, xtrue_tmp)
   batch_true <- c(rep(0, nbreaks), rep(1, nbreaks))
-  ytrue <- dnorm(xtrue, mean=a, sd=b)*c
+  ytrue <- oracle(xtrue)
   
   if (!null) {
     ys <- ys - eff_sz*batches
@@ -258,8 +272,9 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
   }
   
   return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
-              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue,  
-              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha)))
+              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, Effect=eff_sz,
+              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, beta, beta, alpha),
+              oracle_fn=oracle))
 }
 
 #' Impulse Simulation with Asymmetric Covariates
@@ -291,7 +306,9 @@ cb.sims.sim_impulse <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalancedness=
 #' \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
 #' \item{Ttrue}{an \code{[nbreaks*2,1]} matrix, indicating the group/batch the expected outcomes and covariate breakpoints correspond to.}
 #' \item{Xtrue}{an \code{[nbreaks*2, 1]} matrix, indicating the values of the covariate breakpoints for the theoretical expected outcome in \code{Ytrue}.}
+#' \item{Effect}{The batch effect magnitude.}
 #' \item{Overlap}{the theoretical degree of overlap between the covariate distributions for each of the two groups/batches.}
+#' \item{oracle_fn}{A function for fitting outcomes given covariates.}
 #' 
 #' @section Details:
 #' 
@@ -333,12 +350,17 @@ cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalanc
   xs <- cb.sims.covar_generator(batches, alpha, alpha, beta, alpha)
   
   eps <- err*rnorm(n=n, mean=0, sd=1)
-  ys <- dnorm(xs, mean=a, sd=b)*c + eps
+  
+  oracle <- function(x) {
+    impulse.xfm(x, a=a, b=b, c=c)
+  }
+  
+  ys <- oracle(xs) + eps
   
   xtrue_tmp <- seq(from=-1, to=1, length.out=nbreaks)
   xtrue <- c(xtrue_tmp, xtrue_tmp)
   batch_true <- c(rep(0, nbreaks), rep(1, nbreaks))
-  ytrue <- dnorm(xtrue, mean=a, sd=b)*c
+  ytrue <- oracle(xtrue)
   
   if (!null) {
     ys <- ys - eff_sz*batches
@@ -346,8 +368,8 @@ cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalanc
   }
   
   return(list(Ys=cbind(matrix(ys, ncol=1), rnorm(n)), Ts=matrix(batches, ncol=1), Xs=matrix(xs, ncol=1),
-              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, 
-              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, alpha, beta, alpha)))
+              Eps=matrix(eps, ncol=1), x.bounds=c(-1, 1), Ytrue=cbind(ytrue, 0), Xtrue=xtrue, Effect=eff_sz,
+              Ttrue=batch_true, Overlap=cb.sims.get_beta_overlap(alpha, alpha, beta, alpha), oracle_fn=oracle))
 }
 
 #' Compute overlap of two beta distributions
@@ -360,6 +382,7 @@ cb.sims.sim_impulse_asycov <- function(n=100, pi=.5, eff_sz=1, alpha=2, unbalanc
 #' @param nbreaks the number of breakpoints for approximating the covariate overlap.
 #' @return the level of covariate overlap, corresponding to the AUC upper-bounded
 #' by the probability density functions for each of the beta distributions.
+#' @noRd
 cb.sims.get_beta_overlap <- function(a1, b1, a2, b2, nbreaks=1000) {
   xbreaks=seq(from=-1, to=1, length.out=nbreaks)
   dbeta1 <- dbeta(1/2*(xbreaks + 1), a1, b1)
@@ -369,10 +392,48 @@ cb.sims.get_beta_overlap <- function(a1, b1, a2, b2, nbreaks=1000) {
   sum(pmin(dbeta1, dbeta2))
 }
 
+
+#' Sigmoid transform
+#' 
+#' @param Xs the x values
+#' @param a a scale shift
+#' @param b a location shift
+#' @return a simgoid(b Xs)
+#' @noRd
+sigmoid.xfm <- function(Xs, a=4, b=8, ...) {
+  sapply(Xs, function(x) {
+    a*sigmoid(b*x)
+  }) - a
+}
+
+#' Linear transform
+#' 
+#' @param Xs the x values
+#' @param a a scale shift
+#' @param b a location shift
+#' @return aXs + b
+#' @noRd
+linear.xfm <- function(Xs, a=2, b=1, ...) {
+  return(a*Xs + b)
+}
+
+#' Impulse function
+#' 
+#' @param Xs the x values
+#' @param a a location shift for the mean
+#' @param b a multiplicative shift for the spread
+#' @param c a multiplicative shift for the height
+#' @return c dnorm(Xs, mean=a, sd=b)
+#' @noRd
+impulse.xfm <- function(Xs, a=-1/2, b=1/2, c=4, ...) {
+  return(dnorm(Xs, mean=a, sd=b)*c)
+}
+
 #' Sigmoid function
 #' 
 #' @param x the value
 #' @return sigmoid(x)
+#' @noRd
 sigmoid <- function(x) {
   1/(1 + exp(-x))
 }
@@ -386,6 +447,7 @@ sigmoid <- function(x) {
 #' @param a2 alpha of the second covariate distribution.
 #' @param b2 beta of the second covariate distribution.
 #' @return an \code{n} vector, consisting of the covariate values for each of the \code{n} samples.
+#' @noRd
 cb.sims.covar_generator <- function(batches, a1, b1, a2, b2) {
   2*sapply(batches, function(batch) {
     ifelse(batch==0, rbeta(1, a1, b1), rbeta(1, a2, b2))

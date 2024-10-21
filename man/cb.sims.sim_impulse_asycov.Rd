@@ -55,7 +55,9 @@ a list, containing the following:
 \item{Ytrue}{an \code{[nbreaks*2, 2]} matrix, containing the expected outcomes at a covariate level indicated by \code{Xtrue}.}
 \item{Ttrue}{an \code{[nbreaks*2,1]} matrix, indicating the group/batch the expected outcomes and covariate breakpoints correspond to.}
 \item{Xtrue}{an \code{[nbreaks*2, 1]} matrix, indicating the values of the covariate breakpoints for the theoretical expected outcome in \code{Ytrue}.}
+\item{Effect}{The batch effect magnitude.}
 \item{Overlap}{the theoretical degree of overlap between the covariate distributions for each of the two groups/batches.}
+\item{oracle_fn}{A function for fitting outcomes given covariates.}
 }
 \description{
 Impulse Simulation with Asymmetric Covariates

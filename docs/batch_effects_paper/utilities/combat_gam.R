@@ -5,12 +5,12 @@ reticulate::use_virtualenv("~/.virtualenvs/neuroharm/", required=TRUE)
 reticulate::py_config()
 neuroharm <- reticulate::import("neuroHarmonize")
 
-ComBat.GAM <- function(X, batches, covariates, nh.args=NULL) {
+ComBat.GAM <- function(X, batches, covariates, nh.args=NULL, ...) {
   covars <- cbind(data.frame(SITE=batches), covariates)
   res_cgam <- do.call(neuroharm$harmonizationLearn, c(list(X, covars), nh.args))
-  return(list(Data=res_cgam[[2]],
-              Batches=batches,
-              Covariates=covariates,
+  return(list(Ys.corrected=res_cgam[[2]],
+              Ts=batches,
+              Xs=covariates,
               Model=res_cgam[[1]]))
 }
 
@@ -20,9 +20,9 @@ causal.ComBat.GAM <- function(X, batches, covariates, nh.args=NULL, match.args=l
   
   covars <- cbind(data.frame(SITE=t.tilde), Y.tilde)
   res_cgam <- do.call(neuroharm$harmonizationLearn, c(list(X.tilde, covars), nh.args))
-  return(list(Data=res_cgam[[2]],
-              Batches=t.tilde,
-              Covariates=Y.tilde,
+  return(list(Ys.corrected=res_cgam[[2]],
+              Ts=t.tilde,
+              Xs=Y.tilde,
               Retained.Ids=retain.ids,
               Model=res_cgam[[1]]))
 }
@@ -32,8 +32,8 @@ ComBat.GAM.apply <- function(X, batches, covariates, model) {
   
   res_cgam <- do.call(neuroharm$harmonizationApply, list(X, covars, model))
   
-  return(list(Data=res_cgam,
-              Batches=batches,
-              Covariates=covariates,
+  return(list(Ys.corrected=res_cgam,
+              Ts=batches,
+              Xs=covariates,
               Model=model))
 }

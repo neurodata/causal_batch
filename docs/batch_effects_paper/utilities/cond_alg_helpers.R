@@ -37,18 +37,18 @@ dcorr <- function(Ys, Ts, Xs, R=1000, dist.method="euclidean", distance = FALSE,
   return(list(Test=test.out))
 }
 
-cond.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
+cond.combat <- function(Ys, Ts, Xs, ...) {
   mod <- model.matrix(as.formula("~factor(Sex) + Age"), data=Xs)
   Ys.cor <- t(ComBat(t(Ys), Ts, mod=mod))
   return(list(Ys.corrected=Ys.cor, Ts=Ts, Xs=Xs))
 }
 
-assoc.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
+assoc.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05, ...) {
   Ys.cor <- t(ComBat(t(Ys), Ts))
   return(list(Ys.corrected=Ys.cor, Ts=Ts, Xs=Xs))
 }
 
-raw.preproc <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05) {
+raw.preproc <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05, ...) {
   return(list(Ys.corrected=Ys, Ts=Ts, Xs=Xs))
 }
 
@@ -60,6 +60,10 @@ gcm <- function(Y, G, X, R=1000, regr.method="xgboost") {
       return(list(stat=NaN, pvalue=NaN))
     })
   return(list(statistic=res$test.statistic, p.value=res$p.value))
+}
+
+matching.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05, ...) {
+  return(cb.correct.matching_cComBat(Ys, Ts, Xs, match.form, match.args=match.args, retain.ratio=retain.ratio))
 }
 
 compute_overlap <- function(X1, X2) {

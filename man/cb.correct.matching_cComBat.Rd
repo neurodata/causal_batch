@@ -10,6 +10,7 @@ cb.correct.matching_cComBat(
   Xs,
   match.form,
   covar.out.form = NULL,
+  prop.form = NULL,
   reference = NULL,
   match.args = list(method = "nearest", exact = NULL, replace = FALSE, caliper = 0.1),
   retain.ratio = 0.05,
@@ -26,6 +27,8 @@ cb.correct.matching_cComBat(
 \item{match.form}{A formula of columns from \code{Xs}, to be passed directly to \code{\link[MatchIt]{matchit}} for subsequent matching. See \code{formula} argument from \code{\link[MatchIt]{matchit}} for details.}
 
 \item{covar.out.form}{A covariate model, given as a formula. Applies for the outcome regression step of the \code{ComBat} algorithm. Defaults to \code{NULL}, which re-uses \code{match.form} for the covariate/outcome model.}
+
+\item{prop.form}{A propensity model, given as a formula. Applies for the estimation of propensities for the propensity trimming step. Defaults to \code{NULL}, which re-uses \code{match.form} for the covariate/outcome model.}
 
 \item{reference}{the name of the reference/control batch, against which to match. Defaults to \code{NULL}, which treats the reference batch as the smallest batch.}
 

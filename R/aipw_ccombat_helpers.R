@@ -13,7 +13,7 @@
 #'
 #' @return A list containing the fitted AIPW ComBat model and adjusted outcomes:
 #' \itemize{
-#'    \item{\code{Corrected}} An [n, d] matrix of adjusted outcomes
+#'    \item{\code{Ys.corrected}} An [n, d] matrix of adjusted outcomes
 #'    \item{\code{Model}} A list containing the fitted model components:
 #'    \itemize{
 #'       \item{\code{Prop_model}} Fitted propensity model
@@ -100,7 +100,7 @@ cb.learn.fit_aipw_cComBat <- function(Ys, Ts, Xs, aipw.form, covar.out.form) {
     covar.out.form = covar.out.form
   )
   
-  return(list(Corrected = Y_star, Model=model))
+  return(list(Ys.corrected = Y_star, Model=model))
 }
 
 

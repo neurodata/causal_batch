@@ -18,7 +18,7 @@
 #' 
 #' @return a list containing:
 #' \itemize{
-#'    \item{\code{Corrected}} batch effect corrected data.
+#'    \item{\code{Ys.corrected}} batch effect corrected data.
 #'    \item{\code{Model}} the learned batch effect correction model.
 #' }
 #'
@@ -261,9 +261,9 @@ cb.learn.fit_cComBat <- function (dat, batch, mod = NULL, par.prior = TRUE, prio
     dat.orig[keep.rows, ] <- bayesdata
     bayesdata <- dat.orig
   }
-  return(list(Corrected=t(bayesdata), Model=list(Var=var.pooled, Grand.mean=grand.mean,
-                                                 B.hat=B.hat, Gamma=gamma.star, Delta=delta.star,
-                                                 Levels=batch.levels)))
+  return(list(Ys.corrected=t(bayesdata), Model=list(Var=var.pooled, Grand.mean=grand.mean,
+                                                    B.hat=B.hat, Gamma=gamma.star, Delta=delta.star,
+                                                    Levels=batch.levels)))
 }
 
 #' Density of inverse gamma distribution
