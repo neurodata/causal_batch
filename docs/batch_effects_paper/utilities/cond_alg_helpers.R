@@ -63,7 +63,7 @@ gcm <- function(Y, G, X, R=1000, regr.method="xgboost") {
 }
 
 matching.combat <- function(Ys, Ts, Xs, match.form, match.args=NULL, retain.ratio=0.05, ...) {
-  return(cb.correct.matching_cComBat(Ys, Ts, Xs, match.form, match.args=match.args, retain.ratio=retain.ratio))
+  return(cb.correct.matching_cComBat(Ys, Ts, Xs, match.form, match.args=match.args, retain.ratio=retain.ratio, apply.oos=TRUE))
 }
 
 compute_overlap <- function(X1, X2) {
