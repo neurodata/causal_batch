@@ -21,17 +21,15 @@ alpha = .05
 ```
 
 
-
 ```{r}
-meth.ord <- c("Raw", "ComBat", "cComBat", "cComBat-GAM", "Causal cComBat", "Causal cComBat-GAM")
-row.ord <- c("All", "American Clique")
+meth.ord <- c("Raw", "ComBat", "cComBat", "cComBat-GAM", "Matching cComBat")
+row.ord <- c("American Clique", "All")
 outputs <- readRDS('../data/subseq.rds') %>%
   ungroup() %>%
   mutate(p.value=p.adjust(p.value, method="BH")) %>%
   group_by(Method, Cohort) %>%
   arrange(p.value, desc(Statistic)) %>%
   mutate(Rank=row_number()) %>%
-  mutate(Method=recode_factor(Method, "causal ComBat"="Causal cComBat", "conditional ComBat"="cComBat", "conditional NeuroH"="cComBat-GAM", "causal NeuroH"="Causal cComBat-GAM")) %>%
   mutate(Method=factor(Method, levels=meth.ord, ordered = TRUE),
          Cohort=factor(Cohort, levels=row.ord, ordered=TRUE)) %>%
   ungroup()
@@ -62,9 +60,6 @@ overlap_dice <- function(X) {
 n.rank <- 100
 dice.mtx.lng <- outputs %>%
   filter(Cohort == "American Clique") %>%
-  #filter((Method == "Raw" & Cohort == "All") | (Method == "ComBat" & Cohort == "All") |
-  #         (Method == "cComBat" & Cohort == "All") | (Method =="cComBat-GAM" & Cohort == "All") |
-  #         (Method == "Causal cComBat" & Cohort == "American Clique") | (Method == "Causal cComBat-GAM" & Cohort  == "American Clique")) %>%
   filter(Rank <= n.rank) %>%
   overlap_dice()
 
@@ -76,40 +71,151 @@ dice.plt <- dice.mtx.lng %>%
     xlab("Method") +
     ylab("Method") +
     ggtitle(sprintf("(B) DICE Overlap of Top %d Edges", n.rank)) +
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
+          panel.grid=element_blank(), strip.text=element_text(size=14), strip.background = element_blank())
 ```
 
 
 ```{r}
-boxes.cmp <- data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method=c("Raw", "ComBat", "cComBat", "cComBat-GAM", "Causal cComBat", "Causal cComBat-GAM")) %>%
-  mutate(Cohort=c("All", "All", "All", "All", "American Clique", "American Clique"), Color="Included") %>%
-  rbind(data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method="Causal cComBat", Cohort="All", Color="Not Possible")) %>%
-  rbind(data.frame(xmin=1, ymin=1, xmax=116, ymax=116, Method="Causal cComBat-GAM", Cohort="All", Color="Not Possible")) %>%
-  mutate(Method=factor(Method, levels=meth.ord, ordered = TRUE)) %>%
-  filter(Cohort == "American Clique")
-  
 plt.sig <- outputs %>%
   rbind(outputs %>%
-          mutate(Row.Tmp=Row, Row = Column, Column=Row.Tmp) %>% select(-Row.Tmp)) %>%
-  filter(p.value <= alpha, Cohort == "American Clique") %>% # & Rank <= n.rank) %>%
-  filter(Method %in% c("Raw", "ComBat", "cComBat", "Causal cComBat")) %>%
+          mutate(Row.Tmp=Row, Row = Column, Column=Row.Tmp) %>% 
+          select(-Row.Tmp)) %>%
+  filter(p.value < alpha, Cohort == "American Clique") %>%
+  filter(Method %in% c("Raw", "ComBat", "cComBat", "cComBat-GAM", "Matching cComBat")) %>%
   ggplot() +
   geom_tile(aes(x=Row, y=Column, alpha=rev(Rank), fill=Rank)) +
-  #geom_rect(data=boxes.cmp %>% filter(Method %in% c("Raw", "ComBat", "cComBat", "Causal cComBat")),
-  #          aes(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax, color=Color), fill=NA) +
   scale_fill_gradient(name="Rank", low="#530481", high="#fdf2fe") +
   scale_alpha_continuous() +
-  #scale_color_manual("", values=c("Included"="#4daf4a", "Not Possible"="#e41a1c")) +
-  ggtitle("(A) Comparison of Significant Edges based on Correction Technique") +
+  ggtitle("(A) Comparison of Significant Edges") +
   scale_x_discrete(breaks=c(1, 116), name="Parcel") +
   scale_y_discrete(breaks=c(1, 116), name="Parcel") +
-  # facet_grid("Cohort~Method") +
   facet_grid(".~Method") +
   guides(alpha=FALSE) +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid=element_blank(), strip.text=element_text(size=14), strip.background = element_blank())
 ```
 
-```{r, fig.height=8.22, fig.width=10.57}
-grid.arrange(plt.sig, dice.plt, nrow=1, widths=c(.3, .2))
+```{r, fig.height=3.5, fig.width=18}
+grid.arrange(plt.sig, dice.plt, nrow=1, widths=c(.65, .2))
+```
+
+### Preserving within-individual signal
+
+```{r}
+preproc.dat <- readRDS('../data/corrected_data.rds')
+
+nroi <- 116
+
+# Create the pairs in the upper-right quadrant for homotopic/non-homotopic edges
+homotopic.edges <- cbind(seq(1, nroi-1, by=2), seq(2, nroi, by=2))
+m_upper <- upper.tri(matrix(1, nroi, nroi), diag=FALSE)
+m_upper[homotopic.edges] <- 0
+nonhomotopic.edges <- which(m_upper == 1, arr.ind=TRUE)
+
+# Left vs. Right hemisphere
+odd_idx <- seq(1, nroi, by=2)
+even_idx <- seq(2, nroi, by=2)
+same.hem <- array(0, dim=c(nroi, nroi))
+same.hem[odd_idx, odd_idx] <- 1; same.hem[even_idx, even_idx] <- 1
+same.hem <- same.hem*upper.tri(same.hem, diag=FALSE)
+homophilic.edges <- which(same.hem == 1, arr.ind=TRUE)
+
+opp.hem <- array(0, dim=c(nroi, nroi))
+opp.hem[odd_idx, even_idx] <- 1; opp.hem[even_idx, odd_idx] <- 1
+opp.hem <- opp.hem*upper.tri(opp.hem, diag=FALSE)
+heterophilic.edges <- which(opp.hem == 1, arr.ind=TRUE)
+```
+
+#### Connectome plots
+
+```{r}
+conn.dat <- do.call(rbind, lapply(names(preproc.dat), function(fn.name) {
+  gr <- array(apply(preproc.dat[[fn.name]]$Ys, 2, mean), dim=c(nroi, nroi))
+  gr %>%
+    as.data.frame() %>%
+    rownames_to_column("Parcel i") %>%
+    pivot_longer(
+      cols = -`Parcel i`,
+      names_to = "Parcel j",
+      values_to = "Edge Weight"
+    ) %>%
+    mutate(Method=fn.name, `Parcel i`=as.numeric(`Parcel i`),
+           `Parcel j` = as.numeric(str_remove(`Parcel j`, "V")))
+})) %>%
+  mutate(Method=factor(Method, ordered=TRUE, levels=c("Raw", "ComBat", "cComBat", "cComBat-GAM", "Matching cComBat")))
+
+conn.avg.plt <- ggplot(conn.dat, aes(x=`Parcel i`, y=`Parcel j`, fill=`Edge Weight`)) +
+  geom_tile() +
+  scale_fill_gradient(name="Edge Weight", high="#530481", low="#fdf2fe", limits=c(0, 1)) +
+  scale_x_continuous(limits=c(1, 116), breaks=c(1, 58, 116), name="Parcel", expand = c(0, 0)) +
+  scale_y_continuous(limits=c(1, 116), breaks=c(1, 58, 116), name="Parcel", expand = c(0, 0)) +
+  facet_grid(.~Method) +
+  theme_bw() +
+  theme(panel.grid=element_blank(), strip.text=element_text(size=14), strip.background = element_blank()) +
+  ggtitle("(A) Average connectome")
+```
+
+#### Effect size preservation
+
+```{r}
+# reorganize data into n x nroi x nroi array
+results <- do.call(rbind, lapply(names(preproc.dat), function(strategy) {
+  str.preproc.dat <- preproc.dat[[strategy]]
+  n <- nrow(str.preproc.dat$Ys)
+  
+  preproc.gr.dat <- aperm(array(t(str.preproc.dat$Ys), dim=c(nroi, nroi, n)), c(3,1,2))
+  do.call(rbind, lapply(1:n, function(i) {
+    gr.sub <- preproc.gr.dat[i,,]
+    homotopic.diff=mean(gr.sub[homotopic.edges]) - mean(gr.sub[nonhomotopic.edges])
+    homophilic.diff=mean(gr.sub[homophilic.edges]) - mean(gr.sub[heterophilic.edges])
+    
+    
+    return(data.frame(Subject=rownames(str.preproc.dat$Xs)[i], Homotopic.Difference=homotopic.diff,
+                      Homophilic.Difference=homophilic.diff, Method=strategy))
+  }))
+}))
+```
+
+```{r, fig.height=3, fig.width=8}
+results.matched.to.raw <- results %>%
+  filter(Method != "Raw") %>%
+  rename(Method.Homotopic.Difference=Homotopic.Difference, Method.Homophilic.Difference=Homophilic.Difference) %>%
+  left_join(results %>%
+              filter(Method == "Raw") %>%
+              rename(Raw.Homotopic.Difference=Homotopic.Difference, 
+                     Raw.Homophilic.Difference=Homophilic.Difference) %>%
+              select(-Method),
+            by=c("Subject"="Subject")) %>%
+  pivot_longer(
+    cols = contains("Difference"),
+    names_to = c("Type", "Effect.Type"),
+    names_pattern = "(Method|Raw)\\.(Homotopic|Homophilic)\\.Difference",
+    values_to = "Difference"
+  ) %>%
+  pivot_wider(
+    names_from = Type,
+    names_glue = "{.value}_{Type}",
+    values_from = Difference
+  ) %>%
+  rename(
+    Method.Difference = Difference_Method,
+    Raw.Difference = Difference_Raw
+  )
+
+sanity.check.plt <- ggplot(results.matched.to.raw %>% mutate(ord=runif(n())) %>% arrange(ord), aes(x=Raw.Difference, y=Method.Difference, color=Method)) +
+  geom_point(alpha=0.4) +
+  scale_color_manual(values=c("cComBat"="#dd00dd", "cComBat-GAM"="#770077", "ComBat"="black", "Matching cComBat"="blue")) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", linewidth=1.2) +
+  facet_wrap(~Effect.Type, scales="free", nrow=1) +
+  scale_x_continuous(name="Connectivity difference (Raw)") +
+  scale_y_continuous(name="Connectivity difference (Method)") +
+  theme_bw() +
+  ggtitle("(B) Preservation of within-individual effects") +
+  theme(panel.grid=element_blank(), strip.text=element_text(size=14), strip.background = element_blank())
+```
+
+```{r, fig.width=15, fig.height=7}
+grid.arrange(conn.avg.plt, sanity.check.plt, nrow=2)
 ```

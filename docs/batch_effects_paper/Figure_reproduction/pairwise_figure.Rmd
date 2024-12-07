@@ -20,9 +20,11 @@ require(scales)
 ```{r}
 select <- dplyr::select; mutate <- dplyr::mutate; arrange=dplyr::arrange
 
-dset.ord.site <- readRDS("../data/corr_fmri_metadata.rds")
+dset.ord.site <- readRDS("../data/corr_fmri_metadata.rds") %>%
+  filter(!(Dataset %in% c("NKI24tr1400", "NKI24tr645")))
 
-results <- readRDS("../data/pairwise.rds") %>%
+results <- (rawdat = readRDS("../data/pairwise.rds") ) %>%
+  filter(!(Dataset.Trt %in% c("NKI24tr645", "NKI24tr1400")), !(Dataset.Ctrl %in% c("NKI24tr645", "NKI24tr1400"))) %>%
   ungroup() %>%
   mutate(p.value=p.adjust(p.value, method="BH"),
          Dataset.Trt=factor(Dataset.Trt, 
@@ -115,34 +117,47 @@ plot(plt.comb)
 ## Detection Figure
 
 ```{r, fig.height=7, fig.width=13}
-pval.cond_vs_adj <- pval_hmap_chart(results, dset.ord.site, categories=c("Conditional (Non-Causal)", "Adjusted (Causal)"),
-                                    category.ref="Adjusted (Causal)", title="A. Comparing Conditional and Causal Approaches for \nBatch Effect Detection")
+
+det.title = "A. Comparing Conditional and Causal Approaches for \nBatch Effect Detection"
+pval.cond_vs_adj <- pval_hmap_chart(results, dset.ord.site,
+                                    categories=c("Conditional (Non-Causal)",
+                                                 "Adjusted (Causal)"),
+                                    category.ref="Adjusted (Causal)",
+                                    title=det.title)
 
 scanner.info <- dset.ord.site %>% 
-  select(Dataset, "Scan.Manuf", "Scan.Model") %>%
+  select(Dataset, "Scan.Manuf", "Scan.Model", Continent) %>%
   mutate("Scanner" = paste(Scan.Manuf, Scan.Model)) %>%
-  select(-Scan.Manuf, -Scan.Model) %>%
-  left_join(dset.ord, by=c("Dataset"="Dataset"))
+  select(-Scan.Manuf, -Scan.Model)
 
 results.scanner <- results %>%
   left_join(scanner.info %>% rename(Scanner.Trt=Scanner, Continent.Trt=Continent),
             by=c("Dataset.Trt"="Dataset")) %>%
   left_join(scanner.info %>% rename(Scanner.Ctrl=Scanner, Continent.Ctrl=Continent),
             by=c("Dataset.Ctrl"="Dataset")) %>%
-  mutate(Same.Scanner = Scanner.Trt == Scanner.Ctrl, Same.Cont=Continent.Trt == Continent.Ctrl)
+  mutate(Same.Scanner = Scanner.Trt == Scanner.Ctrl,
+         Same.Cont=Continent.Trt == Continent.Ctrl)
 
 pval.hists <- results.scanner %>%
   filter(Method %in% c("Conditional (Non-Causal)", "Adjusted (Causal)")) %>%
   ungroup() %>%
   mutate(Scanner.Rel=ifelse(Same.Scanner, "Same Scanner", "Different Scanner")) %>%
-  mutate(Overlap.Group=ifelse(!Same.Cont, "Low Overlap, Different Continent", ifelse(Overlap > .05, "High Overlap, Same Continent", "Low Overlap, Same Continent"))) %>%
+  mutate(Overlap.Group=ifelse(!Same.Cont, "Low Overlap, Different Continent", 
+                              ifelse(Overlap > .05, "High Overlap, Same Continent",
+                                     "Low Overlap, Same Continent"))) %>%
   group_by(Method, Scanner.Rel, Overlap.Group) %>%
-  summarize(`Confounded`=sum(is.na(p.value))/n(), Reject=sum(p.value < .05, na.rm=TRUE)/n(), 
+  summarize(`Confounded`=sum(is.na(p.value))/n(), 
+            Reject=sum(p.value < .05, na.rm=TRUE)/n(), 
             `Fail to reject`=sum(p.value > .05, na.rm=TRUE)/n()) %>%
-  pivot_longer(`Confounded`:`Fail to reject`, values_to="Fraction", names_to="Test Outcome") %>%
-  mutate(`Test Outcome`=factor(`Test Outcome`, levels=c("Reject", "Fail to reject", "Confounded"),
+  pivot_longer(`Confounded`:`Fail to reject`, values_to="Fraction", 
+               names_to="Test Outcome") %>%
+  mutate(`Test Outcome`=factor(`Test Outcome`, 
+                               levels=c("Reject", "Fail to reject", "Confounded"),
                                ordered=TRUE)) %>%
-  mutate(`Overlap.Group`=factor(`Overlap.Group`, levels=c("High Overlap, Same Continent", "Low Overlap, Same Continent", "Low Overlap, Different Continent"),
+  mutate(`Overlap.Group`=factor(`Overlap.Group`, 
+                                levels=c("High Overlap, Same Continent", 
+                                         "Low Overlap, Same Continent", 
+                                         "Low Overlap, Different Continent"),
                                 ordered=TRUE)) %>%
   filter(!is.na(Scanner.Rel)) %>%
   ggplot(aes(x=`Test Outcome`, y=Fraction, fill=Method, color=Method)) +
@@ -163,7 +178,7 @@ ggsave('./Figures/cond_vs_adj_detection_raw.svg', plot=plt.cond_vs_adj, width=11
 
 ```{r}
  results.scanner %>%
-     filter(Data %in% c("Conditional (Non-Causal)", "Adjusted (Causal)")) %>%
+     filter(Method %in% c("Conditional (Non-Causal)", "Adjusted (Causal)")) %>%
      ungroup() %>%
      mutate(Scanner.Rel=ifelse(Same.Scanner, "Same Scanner", "Different Scanner")) %>%
      mutate(Overlap.Group=ifelse(!Same.Cont, "Low Overlap, Different Continent", ifelse(Overlap > .05, "High Overlap, Same Continent", "Low Overlap, Same Continent"))) %>%

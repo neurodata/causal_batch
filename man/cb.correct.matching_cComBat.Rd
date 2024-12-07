@@ -65,7 +65,7 @@ For more details see the help vignette:
 
 \examples{
 library(causalBatch)
-sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=2)
 cb.correct.matching_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 
 }
@@ -75,6 +75,8 @@ Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no a
 Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011).
 
 W Evan Johnson, et al. "Adjusting batch effects in microarray expression data using empirical Bayes methods" Biostatistics (2007).
+
+Leek JT, Johnson WE, Parker HS, Fertig EJ, Jaffe AE, Zhang Y, Storey JD, Torres LC (2024). sva: Surrogate Variable Analysis. R package version 3.52.0.
 }
 \author{
 Eric W. Bridgeford

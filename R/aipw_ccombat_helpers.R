@@ -26,6 +26,7 @@
 #' }
 #'
 #' @import nnet
+#' @importFrom stats lm
 #'
 #' @noRd
 cb.learn.fit_aipw_cComBat <- function(Ys, Ts, Xs, aipw.form, covar.out.form) {

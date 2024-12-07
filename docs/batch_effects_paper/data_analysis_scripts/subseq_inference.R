@@ -7,8 +7,10 @@ require(cdcsis)
 require(energy)
 require(parallelDist)
 require(igraph)
-require(gcm)
+require(GeneralisedCovarianceMeasure)
 source("../utilities/cond_alg_helpers.R")
+source("../utilities/combat_gam.R")
+
 
 select <- dplyr::select
 in.path <- '/data/'
@@ -20,6 +22,7 @@ parcellation <- "AAL"
 modality <- "fMRI"
 cohort <- "CoRR"
 am.clique <- c("NYU2", "IBATRT", "MRN1", "UWM", "NYU1")
+
 ncores <- parallel::detectCores() - 1
 #as.clique <- c("SWU4", "HNU1", "BNU3", "SWU1", "BNU2", "IPCAS1", "BNU1", "IPCAS6", "IPCAS3", "SWU2", "IPCAS4")
 
@@ -108,8 +111,8 @@ gr.dat <- gr.dat.full[retain.ids,]
 
 R=1000
 
-fns <- list("Causal cComBat"=cb.correct.caus_cComBat, "cComBat"=cond.combat, "ComBat"=assoc.combat,
-            "Raw"=raw.preproc)
+fns <- list("Matching cComBat"=matching.combat, "cComBat"=cond.combat, "ComBat"=assoc.combat,
+            "Raw"=raw.preproc, "cComBat-GAM"=ComBat.GAM)
 
 covars.tbl <- cov.dat %>% ungroup() %>% mutate(id=row_number())
 
@@ -134,80 +137,186 @@ cohorts=list("All"=datasets,
 
 # AAL parcellation has 116 vertices
 nv <- 116
-
-preproc.dat <- lapply(names(cohorts), function(crt) {
-  result <- lapply(names(fns), function(fn.name) {
-    tryCatch({
-      subs.in.crt <- (covars.tbl %>%
-                        filter(Dataset %in% cohorts[[crt]]))$id
-      Ys.crt <- gr.dat[subs.in.crt,]; Ts.crt <- covars.tbl$Dataset[subs.in.crt]
-      Xs.crt <- covars.tbl[subs.in.crt,] %>% select(Age, Sex, Continent) %>% mutate(Sex=factor(Sex))
-      
-      # if american clique, continent will be a redundant variable and cause an error
-      # since it has only 1 level making the model matrix
-      if (crt == "American Clique") {
-        match.form <- "Age + factor(Sex)"
-      } else {
-        match.form <- "Age + factor(Sex) + Continent"; exact=as.formula("~Sex + Continent")
-      }
-      
-      # "correct" batch effect
-      cor.dat <- do.call(fns[[fn.name]], list(Ys.crt, Ts.crt, Xs.crt, match.form=match.form,
-                                              match.args=list(method="nearest", exact=exact, 
-                                                              replace=FALSE, caliper=.1)))
-      
-      res <- list(Ys=cor.dat$Ys.corrected, Ts=cor.dat$Ts, Xs=cor.dat$Xs)
-      if (fn.name == "Causal cComBat" & crt == "American Clique") {
-        res$Retained.Ids <- cor.dat$Retained.Ids
-      }
-      res
-    }, error=function(e) {
-      NULL
-    })
+crt = "American Clique"
+preproc.dat <- lapply(names(fns), function(fn.name) {
+  tryCatch({
+    subs.in.crt <- (covars.tbl %>%
+                      filter(Dataset %in% cohorts[[crt]]))$id
+    Ys.crt <- gr.dat[subs.in.crt,]; Ts.crt <- covars.tbl$Dataset[subs.in.crt]
+    Xs.crt <- covars.tbl[subs.in.crt,] %>% select(Age, Sex, Continent) %>% mutate(Sex=factor(Sex))
+    
+    # if american clique, continent will be a redundant variable and cause an error
+    # since it has only 1 level making the model matrix
+    if (crt == "American Clique") {
+      match.form <- "Age + Sex"; exact=as.formula("~Sex")
+      Xs.crt <- Xs.crt %>% select(Age, Sex)
+    } else {
+      match.form <- "Age + Sex + Continent"; exact=as.formula("~Sex + Continent")
+    }
+    cols_with_var <- which(apply(Ys.crt, 2, var) != 0)
+    # "correct" batch effect
+    cor.dat <- do.call(fns[[fn.name]], list(Ys.crt[,cols_with_var,drop=FALSE], Ts.crt, Xs.crt, match.form=match.form,
+                                            match.args=list(method="nearest", exact=exact, 
+                                                            replace=FALSE, caliper=.1),
+                                            nh.args=list(smooth_terms="Age")))
+    Ys.cor <- array(0, dim=c(nrow(cor.dat$Ys.corrected), ncol(Ys.crt)))
+    Ys.cor[,cols_with_var] <- cor.dat$Ys.corrected
+    
+    res <- list(Ys=Ys.cor, Ts=cor.dat$Ts, Xs=cor.dat$Xs)
+    if (fn.name == "Matching cComBat" & crt == "American Clique") {
+      res$Retained.Ids <- cor.dat$Corrected.Ids
+    }
+    res
+  }, error=function(e) {
+    NULL
   })
-  names(result) <- names(fns)
-  result
 })
-names(preproc.dat) <- names(cohorts)
+names(preproc.dat) <- names(fns)
 
 saveRDS(preproc.dat, "../data/corrected_data.rds")
 
+## Run all pos-pre-processing analyses serially
+require(tidyverse)
+require(parallel)
+require(causalBatch)
+require(cdcsis)
+require(energy)
+require(parallelDist)
+require(igraph)
+require(GeneralisedCovarianceMeasure)
+source("../utilities/cond_alg_helpers.R")
+source("../utilities/combat_gam.R")
+
+R=1000
+crt = "American Clique"
+fns <- list("Matching cComBat"=matching.combat, "cComBat"=cond.combat, "ComBat"=assoc.combat,
+            "Raw"=raw.preproc, "cComBat-GAM"=ComBat.GAM)
+
+covars.tbl <- cov.dat %>% ungroup() %>% mutate(id=row_number())
+
+pos2coord<-function(pos=NULL, coord=NULL, dim.mat=NULL){
+  if(is.null(pos) & is.null(coord) | is.null(dim.mat)){
+    stop("must supply either 'pos' or 'coord', and 'dim.mat'")
+  }
+  if(is.null(pos) & !is.null(coord) & !is.null(dim.mat)){
+    pos <- ((coord[,2]-1)*dim.mat[1])+coord[,1] 
+    return(pos)
+  }
+  if(!is.null(pos) & is.null(coord) & !is.null(dim.mat)){
+    coord <- matrix(NA, nrow=length(pos), ncol=2)
+    coord[,1] <- ((pos-1) %% dim.mat[1]) +1
+    coord[,2] <- ((pos-1) %/% dim.mat[1]) +1
+    return(coord)
+  }
+}
+
+cohorts=list("All"=datasets,
+             "American Clique"=c("NYU2", "IBATRT", "MRN1", "UWM", "NYU1"))
+
 preproc.dat <- readRDS("../data/corrected_data.rds")
-output <- lapply(names(cohorts), function(crt) {
-  result <- lapply(names(fns), function(fn.name) {
-    print(sprintf("%s, %s", crt, fn.name))
-    cor.dat <- preproc.dat[[crt]][[fn.name]]
-    if (crt == "American Clique" & fn.name != "Causal cComBat") {
-      retained.ids <- preproc.dat$`American Clique`$`Causal cComBat`$Retained.Ids
-      cor.dat$Ys <- cor.dat$Ys[retained.ids,]; cor.dat$Ts <- cor.dat$Ts[retained.ids]
-      cor.dat$Xs <- cor.dat$Xs[retained.ids,]
-    }
-    # test whether evidence to reject that edge and sex | age are independent
-    X.sex <- cor.dat$Xs$Sex; X.age <- cor.dat$Xs$Age
-    d <- 116^2
-    test = do.call(rbind, mclapply(1:d, function(i) {
-      i.coord <- pos2coord(i, dim.mat=c(nv, nv))
-      tryCatch({
-        # check if coordinate in upper triangle
-        if (i.coord[1] > i.coord[2]) {
-          test <- gcm(cor.dat$Ys[,i,drop=FALSE], as.matrix(causalBatch:::ohe(X.sex)), matrix(X.age, ncol=1), R=R, regr.method="xgboost")
-          if(i %% 100 == 0) {
-            print(i)
-          }
-          data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=test$statistic,
-                     p.value=test$p.value, Cohort=crt, Method=fn.name)
-        } else {
-          NULL
+output <- lapply(names(fns), function(fn.name) {
+  print(sprintf("%s, %s", crt, fn.name))
+  cor.dat <- preproc.dat[[crt]][[fn.name]]
+  if (crt == "American Clique" & fn.name != "Matching cComBat") {
+    retained.ids <- preproc.dat$`Matching cComBat`$Retained.Ids
+    cor.dat$Ys <- cor.dat$Ys[retained.ids,]; cor.dat$Ts <- cor.dat$Ts[retained.ids]
+    cor.dat$Xs <- cor.dat$Xs[retained.ids,]
+  }
+  # test whether evidence to reject that edge and sex | age are independent
+  X.sex <- cor.dat$Xs$Sex; X.age <- cor.dat$Xs$Age
+  d <- 116^2
+  test = do.call(rbind, mclapply(1:d, function(i) {
+    i.coord <- pos2coord(i, dim.mat=c(nv, nv))
+    tryCatch({
+      # check if coordinate in upper triangle
+      if (i.coord[1] > i.coord[2]) {
+        test <- gcm(cor.dat$Ys[,i,drop=FALSE], as.matrix(causalBatch:::ohe(X.sex)$ohe), matrix(X.age, ncol=1), R=R, regr.method="xgboost")
+        if(i %% 100 == 0) {
+          print(i)
         }
-      }, error=function(e) {
-        data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=NA,
-                   p.value=NA, Cohort=crt, Method=fn.name)
-      })
-    }, mc.cores = ncores - 1))
-  })
-  names(result) <- names(fns)
-  do.call(rbind, result)
+        data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=test$statistic,
+                   p.value=test$p.value, Cohort=crt, Method=fn.name)
+      } else {
+        NULL
+      }
+    }, error=function(e) {
+      data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=NA,
+                 p.value=NA, Cohort=crt, Method=fn.name)
+    })
+  }, mc.cores = ncores - 1))
 })
 output.subseq <- do.call(rbind, output)
-
 saveRDS(output.subseq, "../data/subseq.rds")
+
+
+## Run all pos-pre-processing analyses in parallel
+require(tidyverse)
+require(parallel)
+require(causalBatch)
+require(cdcsis)
+require(energy)
+require(parallelDist)
+require(igraph)
+require(GeneralisedCovarianceMeasure)
+source("../utilities/cond_alg_helpers.R")
+source("../utilities/combat_gam.R")
+
+fn.name = "cComBat-GAM"
+R=1000
+crt = "American Clique"
+
+ncores <- parallel::detectCores() - 1
+file.names = list("Matching cComBat"="matching", "cComBat"="ccombat", "ComBat"="combat",
+                  "Raw"="raw", "cComBat-GAM"="gam")
+
+fns <- list("Matching cComBat"=matching.combat, "cComBat"=cond.combat, "ComBat"=assoc.combat,
+            "Raw"=raw.preproc, "cComBat-GAM"=ComBat.GAM)
+
+pos2coord<-function(pos=NULL, coord=NULL, dim.mat=NULL){
+  if(is.null(pos) & is.null(coord) | is.null(dim.mat)){
+    stop("must supply either 'pos' or 'coord', and 'dim.mat'")
+  }
+  if(is.null(pos) & !is.null(coord) & !is.null(dim.mat)){
+    pos <- ((coord[,2]-1)*dim.mat[1])+coord[,1] 
+    return(pos)
+  }
+  if(!is.null(pos) & is.null(coord) & !is.null(dim.mat)){
+    coord <- matrix(NA, nrow=length(pos), ncol=2)
+    coord[,1] <- ((pos-1) %% dim.mat[1]) +1
+    coord[,2] <- ((pos-1) %/% dim.mat[1]) +1
+    return(coord)
+  }
+}
+
+preproc.dat <- readRDS("../data/corrected_data.rds")
+print(sprintf("%s, %s", crt, fn.name))
+cor.dat <- preproc.dat[[fn.name]]
+if (crt == "American Clique" & fn.name != "Matching cComBat") {
+  retained.ids <- preproc.dat$`Matching cComBat`$Retained.Ids
+  cor.dat$Ys <- cor.dat$Ys[retained.ids,]; cor.dat$Ts <- cor.dat$Ts[retained.ids]
+  cor.dat$Xs <- cor.dat$Xs[retained.ids,]
+}
+# test whether evidence to reject that edge and sex | age are independent
+X.sex <- cor.dat$Xs$Sex; X.age <- cor.dat$Xs$Age
+nv <- 116
+d <- nv^2
+test = do.call(rbind, mclapply(1:d, function(i) {
+  i.coord <- pos2coord(i, dim.mat=c(nv, nv))
+  tryCatch({
+    # check if coordinate in upper triangle
+    if (i.coord[1] > i.coord[2]) {
+      test <- gcm(cor.dat$Ys[,i,drop=FALSE], as.matrix(causalBatch:::ohe(X.sex)$ohe), matrix(X.age, ncol=1), R=R, regr.method="xgboost")
+      if(i %% 100 == 0) {
+        print(i)
+      }
+      data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=test$statistic,
+                 p.value=test$p.value, Cohort=crt, Method=fn.name)
+    } else {
+      NULL
+    }
+  }, error=function(e) {
+    data.frame(Row=i.coord[1], Column=i.coord[2], Edge=i, Statistic=NA,
+               p.value=NA, Cohort=crt, Method=fn.name)
+  })
+}, mc.cores = ncores - 1))
+saveRDS(test, sprintf("../data/subseq_%s.rds", file.names[[fn.name]]))

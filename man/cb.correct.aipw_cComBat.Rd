@@ -10,7 +10,6 @@ cb.correct.aipw_cComBat(
   Xs,
   aipw.form,
   covar.out.form = NULL,
-  reference = NULL,
   retain.ratio = 0.05
 )
 }
@@ -26,8 +25,6 @@ cb.correct.aipw_cComBat(
 \item{covar.out.form}{A covariate model, given as a formula. Applies for the outcome regression step of the \code{ComBat} algorithm. Defaults to \code{NULL}, which re-uses \code{aipw.form} for the covariate/outcome model.}
 
 \item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
-
-\item{apply.oos}{A boolean that indicates whether or not to apply the learned batch effect correction to non-matched samples that are still within a region of covariate support. Defaults to \code{FALSE}.}
 }
 \value{
 a list, containing the following:
@@ -58,14 +55,12 @@ For more details see the help vignette:
 
 \examples{
 library(causalBatch)
-sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=2)
 cb.correct.aipw_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 
 }
 \references{
 Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024).
-
-Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011).
 
 W Evan Johnson, et al. "Adjusting batch effects in microarray expression data using empirical Bayes methods" Biostatistics (2007).
 }

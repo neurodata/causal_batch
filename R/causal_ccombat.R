@@ -35,6 +35,7 @@
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
 #' @references Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011). 
 #' @references W Evan Johnson, et al. "Adjusting batch effects in microarray expression data using empirical Bayes methods" Biostatistics (2007). 
+#' @references Leek JT, Johnson WE, Parker HS, Fertig EJ, Jaffe AE, Zhang Y, Storey JD, Torres LC (2024). sva: Surrogate Variable Analysis. R package version 3.52.0.
 #' 
 #' @section Details:
 #' For more details see the help vignette:
@@ -42,7 +43,7 @@
 #' 
 #' @examples
 #' library(causalBatch)
-#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=2)
 #' cb.correct.matching_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
@@ -67,7 +68,7 @@ cb.correct.matching_cComBat <- function(Ys, Ts, Xs, match.form, covar.out.form=N
     covar.out.form <- match.form
   }
   mod <- model.matrix(as.formula(sprintf("~%s", covar.out.form)), data=X.tilde)
-  fit_obj <- causalBatch:::cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod, ref.batch=reference)
+  fit_obj <- cb.learn.fit_cComBat(Y.tilde, T.tilde, mod = mod, ref.batch=reference)
   fit_obj$Model$Covar.Mod <- match.form
   fit_obj$Model$Reference <- match_obj$Reference
   
@@ -116,11 +117,9 @@ cb.correct.matching_cComBat <- function(Ys, Ts, Xs, match.form, covar.out.form=N
 #'    \item{\code{Model}} the fit batch effect correction model.
 #'    \item{\code{Corrected.Ids}} the ids to which batch effect correction was applied.
 #' }
-#' @param apply.oos A boolean that indicates whether or not to apply the learned batch effect correction to non-matched samples that are still within a region of covariate support. Defaults to \code{FALSE}.
 #' 
 #' @author Eric W. Bridgeford
 #' @references Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024). 
-#' @references Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011). 
 #' @references W Evan Johnson, et al. "Adjusting batch effects in microarray expression data using empirical Bayes methods" Biostatistics (2007). 
 #' 
 #' @section Details:
@@ -129,11 +128,11 @@ cb.correct.matching_cComBat <- function(Ys, Ts, Xs, match.form, covar.out.form=N
 #' 
 #' @examples
 #' library(causalBatch)
-#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=3)
+#' sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=2)
 #' cb.correct.aipw_cComBat(sim$Ys, sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 #' 
 #' @export
-cb.correct.aipw_cComBat <- function(Ys, Ts, Xs, aipw.form, covar.out.form=NULL, reference=NULL, retain.ratio=0.05) {
+cb.correct.aipw_cComBat <- function(Ys, Ts, Xs, aipw.form, covar.out.form=NULL, retain.ratio=0.05) {
   # Ensure Ts is a factor
   Ts <- as.factor(Ts)
   
@@ -155,7 +154,6 @@ cb.correct.aipw_cComBat <- function(Ys, Ts, Xs, aipw.form, covar.out.form=NULL, 
               Ts=T.tilde,
               Xs=X.tilde,
               Model=aipw_results$Model,
-              Esimates=aipw_results$Estimates,
               Corrected.Ids=is.ids))
 }
 
@@ -230,6 +228,7 @@ cb.align.kway_match <- function(Ts, Xs, match.form, reference=NULL, match.args=l
 
 #' Pairwise covariate matching
 #' 
+#' performs pairwise covariate matching, against a reference group, across all other groups.
 #' 
 #' @importFrom magrittr %>%
 #' @importFrom dplyr mutate
