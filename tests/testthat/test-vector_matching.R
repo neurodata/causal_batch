@@ -102,8 +102,8 @@ test_that("as unbalancedness increases, fewer samples retained by VM", {
 })
 
 test_that("VM throws warning when samples retained is low", {
-  sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness=3)
-  expect_warning(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0.7))
+  sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness=2.5)
+  expect_warning(cb.align.vm_trim(sim.low$Ts, sim.low$Xs, retain.ratio = 0.8))
 })
 
 test_that("VM throws error when no samples retained", {

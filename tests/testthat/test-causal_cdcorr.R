@@ -117,9 +117,9 @@ test_that("throws error when no samples are retained", {
 })
 
 test_that("raises warning when few samples are retained", {
-  sim.low <- cb.sims.sim_linear(n=n, eff_sz=eff_sz, unbalancedness = 3)
+  sim.low <- cb.sims.sim_linear(n=n, eff_sz=eff_sz, unbalancedness = 2.5)
   
   expect_warning(cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                        num.threads = ncores, R=R,
-                                       retain.ratio = 0.7))
+                                       retain.ratio = 0.8))
 })

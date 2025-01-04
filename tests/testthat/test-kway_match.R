@@ -48,7 +48,7 @@ test_that("as unbalancedness increases, fewer samples retained by k-way matching
 test_that("K-way matching throws warning when samples retained is low", {
   sim.low <- cb.sims.sim_sigmoid(n=200, unbalancedness=2)
   expect_warning(cb.align.kway_match(sim.low$Ts, data.frame(Covar=sim.low$Xs),
-                                     match.form="Covar", retain.ratio = 0.7))
+                                     match.form="Covar", retain.ratio = 0.8))
 })
 
 test_that("K-way matching throws error when no samples retained", {

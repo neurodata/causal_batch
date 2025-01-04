@@ -2,7 +2,7 @@ Package: causalBatch
 Type: Package
 Title: Causal Batch Effects
 Version: 1.3.0
-Date: 2024-10-14
+Date: 2025-01-07
 Authors@R: 
   c(person(given="Eric W.", family="Bridgeford", role=c("aut", "cre"),
     email="ericwb95@gmail.com"),
@@ -11,7 +11,7 @@ Authors@R:
     person(given="Joshua T.", family="Vogelstein", role="ctb")
   )
 Maintainer: Eric W. Bridgeford <ericwb95@gmail.com>
-Description: Software which provides numerous functionalities for detecting and removing group-level effects from high-dimensional scientific data which, when combined with additional assumptions, allow for causal conclusions, as-described in our manuscripts Bridgeford et al. (2024) <doi:10.1101/2021.09.03.458920> and Bridgeford et al. (2023) <arXiv:2307.13868>. Also provides a number of useful utilities for generating simulations and balancing covariates across multiple groups/batches of data via matching and propensity trimming for more than two groups.
+Description: Software which provides numerous functionalities for detecting and removing group-level effects from high-dimensional scientific data which, when combined with additional assumptions, allow for causal conclusions, as-described in our manuscripts Bridgeford et al. (2024) <doi:10.1101/2021.09.03.458920> and Bridgeford et al. (2023) <doi:10.48550/arXiv.2307.13868>. Also provides a number of useful utilities for generating simulations and balancing covariates across multiple groups/batches of data via matching and propensity trimming for more than two groups.
 Depends:
   R (>= 4.2.0)
 biocViews:
@@ -40,6 +40,6 @@ Suggests:
     roxygen2,
     ks,
     ggplot2
-License: MIT + file LICENSE
+License: GPL-3
 RoxygenNote: 7.3.0
 Config/testthat/edition: 3

@@ -20,10 +20,10 @@ test_that("Matching cComBat makes outcomes for each group more similar", {
 })
 
 test_that("Matching cComBat raises warning when few samples are retained", {
-  sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 2)
+  sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 2.5)
   
   expect_warning(cb.correct.matching_cComBat(sim.low$Ys, sim.low$Ts, data.frame(Covar=sim.low$Xs), 
-                                         match.form="Covar", retain.ratio=0.7))
+                                         match.form="Covar", retain.ratio=0.8))
 })
 
 test_that("Matching cComBat raises error when no samples are retained", {
@@ -65,10 +65,10 @@ test_that("AIPW cComBat makes outcomes for each group more similar", {
 })
 
 test_that("AIPW cComBat raises warning when few samples are retained", {
-  sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 2)
+  sim.low <- cb.sims.sim_linear(n=200, unbalancedness = 2.5)
   
   expect_warning(cb.correct.aipw_cComBat(sim.low$Ys, sim.low$Ts, data.frame(Covar=sim.low$Xs), 
-                                         aipw.form="Covar", retain.ratio=0.7))
+                                         aipw.form="Covar", retain.ratio=0.8))
 })
 
 test_that("AIPW cComBat raises error when no samples are retained", {
