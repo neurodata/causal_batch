@@ -10,24 +10,28 @@ bibentry(
   key      = "cb-package"
 )
 bibentry(
-  bibtype  = "Article",
-  title    = "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?",
-  author   = c(as.person("Eric W. Bridgeford"),
-               as.person("Michael Powell"),
-               as.person("Gregory Kiar"),
-               as.person("Stephanie Noble"),
-               as.person("Jaewon Chung"),
-               as.person("Sambit Panda"),
-               as.person("Ross Lawrence"),
-               as.person("Ting Xu"),
-               as.person("Michael Milham"),
-               as.person("Brian Caffo"),
-               as.person("Joshua T. Vogelstein")),
-  journal  = "bioRxiv",
-  year     = "2024",
-  pages    = "2021.09.03.458920",
-  doi      = "10.1101/2021.09.03.458920",
-  key      = "caus_ccombat-paper"
+  bibtype = "Article",
+  title = "When no answer is better than a wrong answer: A causal perspective on batch effects",
+  author = c(
+    person("Eric W.", "Bridgeford"),
+    person("Michael", "Powell"),
+    person("Gregory", "Kiar"),
+    person("Stephanie", "Noble"),
+    person("Jaewon", "Chung"),
+    person("Sambit", "Panda"),
+    person("Ross", "Lawrence"),
+    person("Ting", "Xu"),
+    person("Michael", "Milham"),
+    person("Brian", "Caffo"),
+    person("Joshua T.", "Vogelstein")
+  ),
+  journal = "Imaging Neuroscience",
+  volume = "3",
+  year = "2025",
+  month = "jan",
+  publisher = "MIT Press",
+  doi = "10.1162/imag_a_00458",
+  key = "caus_ccombat-paper"
 )
 bibentry(
   bibtype  = "Article",
