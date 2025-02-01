@@ -126,7 +126,7 @@ vignette("causal_ccombat", package="causalBatch")
 
 # Results and figure reproduction
 
-See [Batch Effects Paper](https://github.com/neurodata/causal_batch/tree/main/docs/batch_effects_paper) for instructions to reproduce figures from Bridgeford et al. (2024). 
+See [Batch Effects Paper](https://github.com/neurodata/causal_batch/tree/main/docs/batch_effects_paper) for instructions to reproduce figures from Bridgeford et al. (2025). 
 
 # Citation
 
