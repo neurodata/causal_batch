@@ -1,7 +1,7 @@
 # Causal Effect Detection and Correction
 
 [![arXiv shield](https://img.shields.io/badge/arXiv-2307.13868-red.svg?style=flat)](https://arxiv.org/abs/2307.13868)
-[![biorxiv shield](https://img.shields.io/badge/bioRxiv-2021.09.03.458920-blue.svg?style=flat)](https://www.biorxiv.org/content/10.1101/2021.09.03.458920v6)
+[![imaging neuro shield](https://img.shields.io/badge/ImagingNeuro-imag_a_00458-green.svg?style=flat)](https://direct.mit.edu/imag/article/doi/10.1162/imag_a_00458/127407)
 [![](https://cranlogs.r-pkg.org/badges/causalBatch)](https://cran.rstudio.com/web/packages/causalBatch/index.html)
 
 ## Contents
