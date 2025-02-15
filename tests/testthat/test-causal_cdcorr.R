@@ -15,7 +15,7 @@ test_that("reject null when balanced and ATE", {
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                num.threads = ncores,
-                               R=R, width=1)
+                               R=R)
   expect_true(res$Test$p.value < alpha)
 })
 
@@ -23,7 +23,7 @@ test_that("reject null when imbalanced and ATE", {
   sim.low <- cb.sims.sim_linear(n=n, eff_sz=eff_sz, unbalancedness=1.5)
   
   res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
-                               num.threads=ncores, R=R, width=1)
+                               num.threads=ncores, R=R)
   expect_true(res$Test$p.value < alpha)
 })
 
