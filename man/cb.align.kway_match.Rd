@@ -48,7 +48,7 @@ sim <- cb.sims.sim_linear(a=-1, n=100, err=1/8, unbalancedness=1.5)
 cb.align.kway_match(sim$Ts, data.frame(Covar=sim$Xs), "Covar")
 }
 \references{
-Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024).
+Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Imaging Neuroscience (2025).
 
 Daniel E. Ho, et al. "MatchIt: Nonparametric Preprocessing for Parametric Causal Inference" JSS (2011).
 }

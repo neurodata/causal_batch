@@ -35,7 +35,6 @@ def kernelcdtest(Y, T, X, R=1000):
 fnames = list.files("./RCIT/R/", full.names=TRUE)
 sapply(fnames, function(f) suppressMessages(source(f)))
 
-
 test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width=NULL, R=1000, normalize=TRUE, ...) {
   if (is.null(width)) {
     width <- npudensbw(dat=X.tilde, bwmethod="cv.ml")$bw
@@ -72,7 +71,7 @@ test.kcit <- function(Ys, Ts, Xs, R=1000, ...) {
     error=function(e) {
       return(list(Estimate=NaN, p.value=NaN))
     })
-  return(list(Estimate=res$Sta, p.value=res$p))
+  return(list(Estimate=res$stat, p.value=res$pvalue))
 }
 
 test.rcit <- function(Ys, Ts, Xs, R=1000, ...) {
@@ -81,7 +80,7 @@ test.rcit <- function(Ys, Ts, Xs, R=1000, ...) {
     error=function(e) {
       return(list(Estimate=NaN, p.value=NaN))
     })
-  return(list(Estimate=res$Sta, p.value=res$p))
+  return(list(Estimate=res$stat, p.value=res$pvalue))
 }
 
 test.rcot <- function(Ys, Ts, Xs, R=1000, ...) {
@@ -90,7 +89,7 @@ test.rcot <- function(Ys, Ts, Xs, R=1000, ...) {
     error=function(e) {
       return(list(Estimate=NaN, p.value=NaN))
     })
-  return(list(Estimate=res$Sta, p.value=res$p))
+  return(list(Estimate=res$stat, p.value=res$pvalue))
 }
 
 test.gcm <- function(Ys, Ts, Xs, R=1000, ...) {

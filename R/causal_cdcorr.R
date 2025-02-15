@@ -7,11 +7,11 @@
 #' ignorability condiiton) to derive causal conclusions. See citation for more details as to the conditions
 #' under which conclusions derived are causal.
 #' 
-#' @importFrom cdcsis cdcov.test cdcov
+#' @importFrom cdcsis cdcov.test cdcor
 #' @importFrom stats as.dist
 #' @importFrom stats dist
 #' @importFrom stats var
-#' @importFrom np npudensbw
+#' @importFrom np npudensbw npseed
 #' @param Ys Either:
 #' \itemize{
 #'    \item{\code{[n, d]} matrix} the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.

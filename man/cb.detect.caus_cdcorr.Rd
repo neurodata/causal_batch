@@ -12,10 +12,12 @@ cb.detect.caus_cdcorr(
   R = 1000,
   dist.method = "euclidean",
   distance = FALSE,
+  width = NULL,
   seed = 1,
   num.threads = 1,
   retain.ratio = 0.05,
-  ddx = FALSE
+  ddx = FALSE,
+  normalize = TRUE
 )
 }
 \arguments{
@@ -27,7 +29,7 @@ cb.detect.caus_cdcorr(
 
 \item{Ts}{\code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.}
 
-\item{Xs}{\code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.}
+\item{Xs}{\code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples. Ensure that all covariates are encoded properly as continuous or factors (categorical or ordinal) for the bandwidth selection step for kernel width selection.}
 
 \item{prop.form}{a formula specifying a propensity scoring model. Defaults o \code{NULL}, which uses all of the covariates as exposure predictors.}
 
@@ -39,6 +41,8 @@ can be identified by seeing the appropriate documention for the \code{method} ar
 \item{distance}{a boolean for whether (or not) \code{Ys} are already distance matrices. Defaults to \code{FALSE}, which
 will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise distance matrix for \code{Ys}.}
 
+\item{width}{a vector for gaussian kernel bandwidths for each column of \code{Xs}, for use when computing the conditional distance correlation. Defaults to \code{NULL}, which selects bandwidths automatically with \code{\link[np]{npudensbw}}.}
+
 \item{seed}{a random seed to set. Defaults to \code{1}.}
 
 \item{num.threads}{The number of threads for parallel processing (if desired). Defaults to \code{1}.}
@@ -46,6 +50,8 @@ will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise dista
 \item{retain.ratio}{If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.}
 
 \item{ddx}{whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.}
+
+\item{normalize}{whether or not to compute the distance correlation (\code{TRUE}) or distance covariance (\code{FALSE}). Skips unnecessary computation if the test outcome is the only item of interest. Defaults to \code{TRUE}.}
 }
 \value{
 a list, containing the following:
@@ -75,7 +81,7 @@ cb.detect.caus_cdcorr(sim$Ys, sim$Ts, sim$Xs)
 
 }
 \references{
-Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Biorxiv (2024).
+Eric W. Bridgeford, et al. "A Causal Perspective for Batch Effects: When is no answer better than a wrong answer?" Imaging Neuroscience (2025).
 
 Eric W. Bridgeford, et al. "Learning sources of variability from high-dimensional observational studies" arXiv (2023).
 

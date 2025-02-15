@@ -1,0 +1,3 @@
+[submodule "docs/causal_cdcorr_paper/helpers/RCIT"]
+	path = docs/causal_cdcorr_paper/helpers/RCIT
+	url = git@github.com:ebridge2/RCIT.git
