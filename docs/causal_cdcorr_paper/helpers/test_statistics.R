@@ -27,7 +27,7 @@ def kernelcdtest(Y, T, X, R=1000):
     
     df = pd.DataFrame(df_dict)
     group_col = 'Group'
-    stat, pval = dod.cd.KernelCDTest(null_reps=int(R)).test(df, xvars, yvars, group_col)
+    stat, pval = dod.cd.KernelCDTest(null_reps=int(R)).test(df, group_col, yvars, xvars)
     return pval, stat
 ")
 
@@ -73,7 +73,7 @@ test.kcit <- function(Ys, Ts, Xs, R=1000, ...) {
 
 test.rcit <- function(Ys, Ts, Xs, R=1000, ...) {
   res <- tryCatch({
-    RCIT(data.matrix(Ys), data.matrix(causalBatch:::ohe(Ts)$ohe), data.matrix(Xs), approx="perm", nperm=R)},
+    RCIT(data.matrix(Ys), data.matrix(causalBatch:::ohe(Ts)$ohe), data.matrix(Xs), approx="perm", nrep=R)},
     error=function(e) {
       return(list(Estimate=NaN, p.value=NaN))
     })
@@ -82,7 +82,7 @@ test.rcit <- function(Ys, Ts, Xs, R=1000, ...) {
 
 test.rcot <- function(Ys, Ts, Xs, R=1000, ...) {
   res <- tryCatch({
-    RCoT(data.matrix(Ys), data.matrix(causalBatch:::ohe(Ts)$ohe), data.matrix(Xs), approx="perm", nperm=R)},
+    RCoT(data.matrix(Ys), data.matrix(causalBatch:::ohe(Ts)$ohe), data.matrix(Xs), approx="perm", nrep=R)},
     error=function(e) {
       return(list(Estimate=NaN, p.value=NaN))
     })
