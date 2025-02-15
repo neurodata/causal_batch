@@ -3,6 +3,7 @@ require(causalBatch)
 require(GeneralisedCovarianceMeasure)
 require(vegan)
 library(reticulate)
+require(RCIT)
 use_virtualenv("causal")
 
 # Define the Python function in R
@@ -30,9 +31,6 @@ def kernelcdtest(Y, T, X, R=1000):
     return pval, stat
 ")
 
-
-fnames = list.files("./RCIT/R/", full.names=TRUE)
-sapply(fnames, function(f) suppressMessages(source(f)))
 
 test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width=NULL, R=1000, normalize=TRUE, ...) {
   if (is.null(width)) {
