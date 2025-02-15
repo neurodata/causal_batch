@@ -7,27 +7,30 @@
 #' ignorability condiiton) to derive causal conclusions. See citation for more details as to the conditions
 #' under which conclusions derived are causal.
 #' 
-#' @importFrom cdcsis cdcov.test
+#' @importFrom cdcsis cdcov.test cdcov
 #' @importFrom stats as.dist
 #' @importFrom stats dist
 #' @importFrom stats var
+#' @importFrom np npudensbw
 #' @param Ys Either:
 #' \itemize{
 #'    \item{\code{[n, d]} matrix} the outcome variables with \code{n} samples in \code{d} dimensions. In this case, \code{distance} should be \code{FALSE}.
 #'    \item{\code{[n, n]} \code{dist} object} a distance object for the \code{n} samples. In this case, \code{distance} should be \code{TRUE}.
 #' }
 #' @param Ts \code{[n]} the labels of the samples, with \code{K < n} levels, as a factor variable.
-#' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples.
+#' @param Xs \code{[n, r]} the \code{r} covariates/confounding variables, for each of the \code{n} samples. Ensure that all covariates are encoded properly as continuous or factors (categorical or ordinal) for the bandwidth selection step for kernel width selection.
 #' @param prop.form a formula specifying a propensity scoring model. Defaults o \code{NULL}, which uses all of the covariates as exposure predictors. 
 #' @param R the number of repetitions for permutation testing. Defaults to \code{1000}.
 #' @param dist.method the method used for computing distance matrices. Defaults to \code{"euclidean"}. Other options
 #' can be identified by seeing the appropriate documention for the \code{method} argument for the \code{\link[stats]{dist}} function.
 #' @param distance a boolean for whether (or not) \code{Ys} are already distance matrices. Defaults to \code{FALSE}, which
 #' will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise distance matrix for \code{Ys}.
+#' @param width a vector for gaussian kernel bandwidths for each column of \code{Xs}, for use when computing the conditional distance correlation. Defaults to \code{NULL}, which selects bandwidths automatically with \code{\link[np]{npudensbw}}.
 #' @param seed a random seed to set. Defaults to \code{1}.
 #' @param num.threads The number of threads for parallel processing (if desired). Defaults to \code{1}.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
 #' @param ddx whether to show additional diagnosis messages. Defaults to \code{FALSE}. Can help with debugging if unexpected results are obtained.
+#' @param normalize whether or not to compute the distance correlation (\code{TRUE}) or distance covariance (\code{FALSE}). Skips unnecessary computation if the test outcome is the only item of interest. Defaults to \code{TRUE}.
 #' 
 #' @return a list, containing the following:
 #' \itemize{
@@ -50,8 +53,9 @@
 #' cb.detect.caus_cdcorr(sim$Ys, sim$Ts, sim$Xs)
 #' 
 #' @export
-cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, prop.form=NULL, R=1000, dist.method="euclidean", distance = FALSE, seed=1, num.threads=1,
-                                  retain.ratio=0.05, ddx=FALSE) {
+cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, prop.form=NULL, R=1000, dist.method="euclidean",
+                                  distance = FALSE, width=NULL, seed=1, num.threads=1, retain.ratio=0.05, ddx=FALSE, 
+                                  normalize=TRUE) {
   Xs <- as.data.frame(Xs)
   
   # vector match for propensity trimming, and then reduce sub-sample to the
@@ -67,19 +71,29 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, prop.form=NULL, R=1000, dist.metho
     DY.tilde = dist(Y.tilde, method=dist.method)
   }
   X.tilde <- Xs[retain.ids,,drop=FALSE]
+  if (is.null(width)) {
+    if (!is.null(seed)) {
+      npseed(seed)
+    }
+    width <- npudensbw(dat=X.tilde, bwmethod="cv.ml")$bw
+  }
   
   # remove covariate columns with no variance after discarding imbalanced samples
   dropped.cols <- apply(X.tilde, 2, var) == 0
   if (sum(dropped.cols) > 0) {
     message(sprintf("dropping %d columns...", sum(dropped.cols)))
   }
-  X.tilde <- X.tilde[, !dropped.cols, drop=FALSE]
+  X.tilde <- data.matrix(X.tilde[, !dropped.cols, drop=FALSE])
+  width <- width[!dropped.cols]
   
   DT.tilde <- zero_one_dist(Ts[retain.ids])$DT
   
   # run statistical test
-  test.out <- cdcov.test(DY.tilde, DT.tilde, X.tilde, num.bootstrap = R,
+  test.out <- cdcov.test(DY.tilde, DT.tilde, X.tilde, num.bootstrap = R, width = width,
                          seed=seed, num.threads=num.threads, distance=TRUE)
+  if (normalize) {
+    test.out$statistic <- cdcor(DY.tilde, DT.tilde, X.tilde, width=width, distance=TRUE)$statistic
+  }
   return(list(Test=test.out,
               Retained.Ids=retain.ids))
 }
