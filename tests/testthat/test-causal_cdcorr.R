@@ -15,7 +15,7 @@ test_that("reject null when balanced and ATE", {
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
                                num.threads = ncores,
-                               R=R)
+                               R=R, width=1)
   expect_true(res$Test$p.value < alpha)
 })
 
@@ -23,7 +23,7 @@ test_that("reject null when imbalanced and ATE", {
   sim.low <- cb.sims.sim_linear(n=n, eff_sz=eff_sz, unbalancedness=1.5)
   
   res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
-                               num.threads=ncores, R=R)
+                               num.threads=ncores, R=R, width=1)
   expect_true(res$Test$p.value < alpha)
 })
 
@@ -33,7 +33,7 @@ test_that("typically fails to reject null when balanced and ATE=0", {
     sim.high <- cb.sims.sim_linear(n=n, eff_sz=0)
     
     res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
-                                 num.threads = ncores, R=R)
+                                 num.threads = ncores, R=R, width=1)
     res$Test$p.value < alpha - eps
   })
   
@@ -48,7 +48,7 @@ test_that("typically fails to reject null when imbalanced and ATE=0", {
     sim.low <- cb.sims.sim_linear(n=n, eff_sz=0, unbalancedness = 1.5)
     
     res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
-                                 num.threads = ncores, R=R)
+                                 num.threads = ncores, R=R, width=1)
     res$Test$p.value < alpha - eps
   })
   
@@ -58,7 +58,7 @@ test_that("typically fails to reject null when imbalanced and ATE=0", {
 test_that("works when covariates are given as a vector", {
   sim.high <- cb.sims.sim_linear(n=n, eff_sz=eff_sz)
   
-  res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, as.vector(sim.high$Xs), R=R)
+  res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, as.vector(sim.high$Xs), R=R, width=1)
   expect_true(res$Test$p.value < alpha + eps)
 })
 
@@ -67,7 +67,7 @@ test_that("works with >1 covariate levels", {
   sim.high$Xs <- cbind(sim.high$Xs, runif(n))
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
-                               num.threads = ncores, R=R)
+                               num.threads = ncores, R=R, width=1)
   expect_true(res$Test$p.value < alpha + eps)
 })
 
@@ -75,7 +75,7 @@ test_that("rejects null with non-linearities and ATE", {
   sim.high <- cb.sims.sim_sigmoid(n=n, eff_sz=eff_sz)
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
-                               num.threads = ncores, R=R)
+                               num.threads = ncores, R=R, width=1)
   expect_true(res$Test$p.value < alpha + eps)
   
   sim.low <- cb.sims.sim_sigmoid(n=n, eff_sz=eff_sz, unbalancedness=1.5)
@@ -92,7 +92,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
     sim.high <- cb.sims.sim_sigmoid(n=n, eff_sz=0)
     
     res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
-                                 num.threads = ncores, R=R)
+                                 num.threads = ncores, R=R, width=1)
     res$Test$p.value < alpha - eps
   })
   expect_true(mean(pwr_test.bal) < alpha + eps)
@@ -103,7 +103,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
     
     res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                  num.threads = parallel::detectCores(),
-                                 R=R)
+                                 R=R, width=1)
     res$Test$p.value < alpha - eps
   })
   expect_true(mean(pwr_test.imbal) < alpha + eps)
@@ -113,7 +113,7 @@ test_that("throws error when no samples are retained", {
   sim.low <- cb.sims.sim_linear(n=n, eff_sz=eff_sz, unbalancedness = 10)
   
   expect_error(suppressWarnings(cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
-                                                      num.threads = ncores, R=R)))
+                                                      num.threads = ncores, R=R), width=1))
 })
 
 test_that("raises warning when few samples are retained", {
@@ -121,5 +121,5 @@ test_that("raises warning when few samples are retained", {
   
   expect_warning(cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
                                        num.threads = ncores, R=R,
-                                       retain.ratio = 0.8))
+                                       retain.ratio = 0.8, width=1))
 })
