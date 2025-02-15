@@ -1,7 +1,6 @@
 require(cdcsis)
 require(causalBatch)
 require(GeneralisedCovarianceMeasure)
-require(RCIT)
 require(vegan)
 library(reticulate)
 use_virtualenv("causal")
