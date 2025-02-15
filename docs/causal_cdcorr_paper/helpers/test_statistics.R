@@ -27,7 +27,7 @@ def kernelcdtest(Y, T, X, R=1000):
     
     df = pd.DataFrame(df_dict)
     group_col = 'Group'
-    stat, pval = dod.cd.KernelCDTest(null_reps=int(R)).test(df, group_col, yvars, xvars)
+    stat, pval = dod.cd.KernelCDTest(null_reps=int(R)).test(df, [group_col], yvars, xvars)
     return pval, stat
 ")
 
