@@ -453,4 +453,3 @@ cb.sims.covar_generator <- function(batches, a1, b1, a2, b2) {
     ifelse(batch==0, rbeta(1, a1, b1), rbeta(1, a2, b2))
   }) - 1
 }
-

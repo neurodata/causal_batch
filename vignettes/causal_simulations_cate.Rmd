@@ -1,0 +1,137 @@
+---
+title: "Simulations for Causal Group Effects with Conditional ATE"
+author: "Eric W. Bridgeford"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cb.simulations.cate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE}
+require(causalBatch)
+require(ggplot2)
+require(tidyr)
+require(gridExtra)
+n = 200
+```
+
+In this vignette, we will generate and plot simulations that will be used throughout this package and in the corresponding manuscript(s) for detecting and correction for group-level effects in multi-dimensional scientific data, where the group-level effect is conditional on the covariate level. These simulations will focus on examples with $n=200$ samples in $d=2$ dimensions.
+
+We will start by generating some code which will produce exploratory plots for us:
+
+```{r}
+# a function for plotting a scatter plot of the data
+plot.sim <- function(Ys, Ts, Xs, title="", 
+                     xlabel="Covariate",
+                     ylabel="Outcome (1st dimension)") {
+  data = data.frame(Y1=Ys[,2], Y2=Ys[,2], 
+                    Group=factor(Ts, levels=c(0, 1, 2), ordered=TRUE), 
+                    Covariates=Xs)
+  
+  data %>%
+    ggplot(aes(x=Covariates, y=Y1, color=Group)) +
+    geom_point() +
+    labs(title=title, x=xlabel, y=ylabel) +
+    scale_x_continuous(limits = c(-1, 1)) +
+    scale_color_manual(values=c(`0`="#bb0000", `1`="#0000bb", `2`="#00bb00"), 
+                       name="Group") +
+    theme_bw()
+}
+
+# a function for plotting a scatter plot of the data, along with
+# lines denoting the expected outcome (per covariate level)
+plot.sim.expected <- function(Ys, Ts, Xs, Ytrue, Ttrue, Xtrue, title="",
+                           xlabel="Covariate",
+                           ylabel="Outcome (1st dimension)") {
+  data = data.frame(Y1=Ys[,2], Y2=Ys[,2], 
+                    Group=factor(Ts, levels=c(0, 1, 2), ordered=TRUE), 
+                    Covariates=Xs)
+  data.true = data.frame(Y1=Ytrue[,2], Y2=Ytrue[,2], 
+                         Group=factor(Ttrue, levels=c(0, 1, 2), ordered=TRUE), 
+                         Covariates=Xtrue)
+  
+  data %>%
+    ggplot(aes(x=Covariates, y=Y1, color=Group)) +
+    geom_point(alpha=0.5) +
+    labs(title=title, x=xlabel, y=ylabel) +
+    geom_line(data=data.true, aes(group=Group), linewidth=1.2) +
+    scale_x_continuous(limits = c(-1, 1)) +
+    scale_color_manual(values=c(`0`="#bb0000", `1`="#0000bb", `2`="#00bb00"), 
+                       name="Group") +
+    theme_bw()
+}
+```
+
+# Sigmoidal Simulation
+
+In this simulation, we will generate a sigmoidal simulation with $n=200$ samples, where the samples have an equal probability of being from each group. The `n` argument controls the number of samples. The effect size controls the rotation of the second group around the other.
+
+```{r, fig.width=8, fig.height=3}
+sim.null = cb.sims.cate.sigmoidal_sim(n=200, p=2, eff_sz = 0, covar_eff_sz=5, balance=0.5, err=0.5)
+sim = cb.sims.cate.sigmoidal_sim(n=200, p=2, eff_sz = 0.25, covar_eff_sz=5, balance=0.5, err=0.5)
+
+plot.null <- plot.sim.expected(sim.null$Ys, sim.null$Ts, sim.null$Xs, sim.null$Ytrue,
+                               sim.null$Ttrue, sim.null$Xtrue, title="Sigmoidal Simulation, Null Effect")
+plot.alt <- plot.sim.expected(sim$Ys, sim$Ts, sim$Xs, sim$Ytrue, sim$Ttrue,
+                              sim$Xtrue, title="Sigmoidal Simulation, Effect")
+
+grid.arrange(plot.null, plot.alt, nrow=1)
+```
+
+# Non-Monotone Simulation
+
+In this simulation, we will generate a non-monotone simulation with $n=200$ samples, where the samples have an equal probability of being from each group. The `n` argument controls the number of samples. The effect size controls the spacing of the non-monotone sections from one another.
+
+```{r, fig.width=8, fig.height=3}
+sim.null = cb.sims.cate.nonmonotone_sim(n=200, p=2, eff_sz = 0, balance=0.5, err=0.5)
+sim = cb.sims.cate.nonmonotone_sim(n=200, p=2, eff_sz = 1, balance=0.5, err=0.5)
+
+plot.null <- plot.sim.expected(sim.null$Ys, sim.null$Ts, sim.null$Xs, sim.null$Ytrue,
+                               sim.null$Ttrue, sim.null$Xtrue, title="Sigmoidal Simulation, Null Effect")
+plot.alt <- plot.sim.expected(sim$Ys, sim$Ts, sim$Xs, sim$Ytrue, sim$Ttrue,
+                              sim$Xtrue, title="Sigmoidal Simulation, Effect")
+
+grid.arrange(plot.null, plot.alt, nrow=1)
+```
+
+# K-class
+
+In this simulation, we will generate a $K$-class sigmoidal simulation with $n=200$ samples, where the samples have an equal probability of being from each group. The `n` argument controls the number of samples. The effect size controls the rotation of the first group from the other two.
+
+```{r}
+sim.null = cb.sims.cate.kclass_rotation_sim(n=200, p=2, eff_sz = 0, covar_eff_sz=5, balance=0.5, err=0.5)
+sim = cb.sims.cate.kclass_rotation_sim(n=200, p=2, eff_sz = 0.25, covar_eff_sz=5, balance=0.5, err=0.5)
+
+plot.null <- plot.sim.expected(sim.null$Ys, sim.null$Ts, sim.null$Xs, sim.null$Ytrue,
+                               sim.null$Ttrue, sim.null$Xtrue, title="Sigmoidal Simulation, Null Effect")
+plot.alt <- plot.sim.expected(sim$Ys, sim$Ts, sim$Xs, sim$Ytrue, sim$Ttrue,
+                              sim$Xtrue, title="Sigmoidal Simulation, Effect")
+
+grid.arrange(plot.null, plot.alt, nrow=1)
+```
+
+
+# Heteroskedastic
+
+In this simulation, we will generate a $K$-class sigmoidal simulation with $n=200$ samples, where the samples have an equal probability of being from each group. The `n` argument controls the number of samples. The effect size controls how wide the error is for the first group compared to the second.
+
+```{r}
+sim.null = cb.sims.cate.heteroskedastic_sim(n=200, p=2, eff_sz = 0, covar_eff_sz=5, balance=0.5, err=0.5)
+sim = cb.sims.cate.heteroskedastic_sim(n=200, p=2, eff_sz = 2, covar_eff_sz=5, balance=0.5, err=0.5)
+
+plot.null <- plot.sim.expected(sim.null$Ys, sim.null$Ts, sim.null$Xs, sim.null$Ytrue,
+                               sim.null$Ttrue, sim.null$Xtrue, title="Sigmoidal Simulation, Null Effect")
+plot.alt <- plot.sim.expected(sim$Ys, sim$Ts, sim$Xs, sim$Ytrue, sim$Ttrue,
+                              sim$Xtrue, title="Sigmoidal Simulation, Effect")
+
+grid.arrange(plot.null, plot.alt, nrow=1)
+```
