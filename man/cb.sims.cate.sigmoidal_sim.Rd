@@ -17,7 +17,8 @@ cb.sims.cate.sigmoidal_sim(
   a = 2,
   b = 8,
   err = 1,
-  nbreaks = 200
+  nbreaks = 200,
+  rotate = TRUE
 )
 }
 \arguments{

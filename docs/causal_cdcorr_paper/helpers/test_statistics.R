@@ -61,7 +61,7 @@ test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=10
   return(list(Estimate=test.out$statistic, p.value=test.out$p.value))
 }
 
-test.caus_cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", R=1000, width=NULL, normalize=TRUE, ...) {
+test.caus_cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", R=1000, width="scott", normalize=TRUE, ...) {
   test.out <- tryCatch({
     cb.detect.caus_cdcorr(Ys, Ts, Xs, R=R, dist.method=dist.method, width=width, normalize=normalize)
   }, error=function(e) {

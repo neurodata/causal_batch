@@ -189,7 +189,8 @@ cb.sims.random_rotation <- function(p) {
 #' sim = cb.sims.cate.sigmoidal_sim()
 #' 
 #' @export
-cb.sims.cate.sigmoidal_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, covar_eff_sz=5, alpha=2, beta=8, common=10, a=2, b=8, err=1, nbreaks=200) {
+cb.sims.cate.sigmoidal_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, covar_eff_sz=5, alpha=2, 
+                                       beta=8, common=10, a=2, b=8, err=1, nbreaks=200, rotate=TRUE) {
   rotation <- eff_sz * base::pi  # Angle of rotation of the second group
   rot_rescale <- cos(rotation)  # the rescaling factor for the rotation of the second group
   
