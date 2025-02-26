@@ -32,12 +32,17 @@ def kernelcdtest(Y, T, X, R=1000):
     return pval, stat
 ")
 
-
-test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width=NULL, R=1000, normalize=TRUE, ...) {
-  if (is.null(width)) {
-    width <- npudensbw(dat=Xs, bwmethod="cv.ml")$bw
-  } else {
-    
+test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=1000, normalize=TRUE, ...) {
+  
+  if (width == "scott") {
+    width <- apply(X.tilde, 2, causalBatch:::scotts_rule)
+  } else if (width == "xv") {
+    if (!is.null(seed)) {
+      npseed(seed)
+    }
+    width <- npudensbw(dat=X.tilde, bwmethod="cv.ml")$bw
+  } else if (length(width) != dim(Xs)[2]) {
+    stop("You have either not specified a valid bandwidth option. Options are either 'scott', 'xv', or a length-r vector, where r is the number of columns in `Xs`.")
   }
   
   DY <- dist(data.matrix(Ys), method=dist.method)

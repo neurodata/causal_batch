@@ -25,7 +25,13 @@
 #' can be identified by seeing the appropriate documention for the \code{method} argument for the \code{\link[stats]{dist}} function.
 #' @param distance a boolean for whether (or not) \code{Ys} are already distance matrices. Defaults to \code{FALSE}, which
 #' will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise distance matrix for \code{Ys}.
-#' @param width a vector for gaussian kernel bandwidths for each column of \code{Xs}, for use when computing the conditional distance correlation. Defaults to \code{NULL}, which selects bandwidths automatically with \code{\link[np]{npudensbw}}.
+#' @param width Either:
+#' \itemize{
+#'  \item{"scott"}{Specifies to use Scott's rule for bandwidth computation.}
+#'  \item{"xv"}{Computes bandwidths using cross validation via the \code{\link[np]{npudensbw}} function.}
+#'  \item{\code{r} vector}{A vector specifying the bandwidths for each dimension of \code{Xs}.}
+#' }
+#' Defaults to \code{"scott"}.
 #' @param seed a random seed to set. Defaults to \code{1}.
 #' @param num.threads The number of threads for parallel processing (if desired). Defaults to \code{1}.
 #' @param retain.ratio If the number of samples retained is less than \code{retain.ratio*n}, throws a warning. Defaults to \code{0.05}.
@@ -54,7 +60,7 @@
 #' 
 #' @export
 cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, prop.form=NULL, R=1000, dist.method="euclidean",
-                                  distance = FALSE, width=NULL, seed=1, num.threads=1, retain.ratio=0.05, ddx=FALSE, 
+                                  distance = FALSE, width="scott", seed=1, num.threads=1, retain.ratio=0.05, ddx=FALSE, 
                                   normalize=TRUE) {
   Xs <- as.data.frame(Xs)
   
@@ -71,11 +77,15 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, prop.form=NULL, R=1000, dist.metho
     DY.tilde = dist(Y.tilde, method=dist.method)
   }
   X.tilde <- Xs[retain.ids,,drop=FALSE]
-  if (is.null(width)) {
+  if (width == "scott") {
+      width <- apply(X.tilde, 2, scotts_rule)
+  } else if (width == "xv") {
     if (!is.null(seed)) {
       npseed(seed)
     }
     width <- npudensbw(dat=X.tilde, bwmethod="cv.ml")$bw
+  } else if (length(width) != dim(Xs)[2]) {
+    stop("You have either not specified a valid bandwidth option. Options are either 'scott', 'xv', or a length-r vector, where r is the number of columns in `Xs`.")
   }
   
   # remove covariate columns with no variance after discarding imbalanced samples
@@ -243,4 +253,14 @@ zero_one_dist <- function(Ts, levels=NULL) {
   Ts_ohe <- ohe(Ts, levels=levels)
   
   return(list(DT=dist(Ts_ohe$ohe)/sqrt(2), Levels=Ts_ohe$levels))
+}
+
+#'' A utility to compute Scott's rule for bandwidth selection.
+#'
+#' @param x a \code{r} vector.
+#' @return the bandwidth selected.
+#' @author Eric W. Bridgeford
+#' @noRd
+scotts_rule <- function(x) {
+  1.06 * sd(x) * length(x)^(-1/5)
 }

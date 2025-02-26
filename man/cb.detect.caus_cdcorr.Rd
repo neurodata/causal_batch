@@ -12,7 +12,7 @@ cb.detect.caus_cdcorr(
   R = 1000,
   dist.method = "euclidean",
   distance = FALSE,
-  width = NULL,
+  width = "scott",
   seed = 1,
   num.threads = 1,
   retain.ratio = 0.05,
@@ -41,7 +41,13 @@ can be identified by seeing the appropriate documention for the \code{method} ar
 \item{distance}{a boolean for whether (or not) \code{Ys} are already distance matrices. Defaults to \code{FALSE}, which
 will use \code{dist.method} parameter to compute an \code{[n, n]} pairwise distance matrix for \code{Ys}.}
 
-\item{width}{a vector for gaussian kernel bandwidths for each column of \code{Xs}, for use when computing the conditional distance correlation. Defaults to \code{NULL}, which selects bandwidths automatically with \code{\link[np]{npudensbw}}.}
+\item{width}{Either:
+\itemize{
+ \item{"scott"}{Specifies to use Scott's rule for bandwidth computation.}
+ \item{"xv"}{Computes bandwidths using cross validation via the \code{\link[np]{npudensbw}} function.}
+ \item{\code{r} vector}{A vector specifying the bandwidths for each dimension of \code{Xs}.}
+}
+Defaults to \code{"scott"}.}
 
 \item{seed}{a random seed to set. Defaults to \code{1}.}
 

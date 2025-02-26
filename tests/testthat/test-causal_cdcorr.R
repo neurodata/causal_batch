@@ -67,7 +67,7 @@ test_that("works with >1 covariate levels", {
   sim.high$Xs <- cbind(sim.high$Xs, runif(n))
   
   res <- cb.detect.caus_cdcorr(sim.high$Ys, sim.high$Ts, sim.high$Xs,
-                               num.threads = ncores, R=R, width=1)
+                               num.threads = ncores, R=R)
   expect_true(res$Test$p.value < alpha + eps)
 })
 
@@ -81,7 +81,7 @@ test_that("rejects null with non-linearities and ATE", {
   sim.low <- cb.sims.sim_sigmoid(n=n, eff_sz=eff_sz, unbalancedness=1.5)
   
   res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
-                               num.threads = ncores, R=R)
+                               num.threads = ncores, R=R, width=1)
   expect_true(res$Test$p.value < alpha + eps)
 })
 
@@ -102,7 +102,7 @@ test_that("fails to reject null with non-linearities and no ATE", {
     sim.low <- cb.sims.sim_sigmoid(n=n, unbalancedness = 1.2, eff_sz=0)
     
     res <- cb.detect.caus_cdcorr(sim.low$Ys, sim.low$Ts, sim.low$Xs,
-                                 num.threads = parallel::detectCores(),
+                                 num.threads = ncores,
                                  R=R, width=1)
     res$Test$p.value < alpha - eps
   })
