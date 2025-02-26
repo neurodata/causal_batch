@@ -35,7 +35,7 @@ def kernelcdtest(Y, T, X, R=1000):
 test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=1000, normalize=TRUE, ...) {
   
   if (width == "scott") {
-    width <- apply(X.tilde, 2, causalBatch:::scotts_rule)
+    width <- apply(Xs, 2, causalBatch:::scotts_rule)
   } else if (width == "xv") {
     if (!is.null(seed)) {
       npseed(seed)
