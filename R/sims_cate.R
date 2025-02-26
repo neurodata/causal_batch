@@ -105,6 +105,50 @@ cb.sims.cate.simulate_covars_multiclass <- function(groups, balance=1, alpha=2, 
   return(covars)
 }
 
+
+#' Generate a Random Orthogonal Matrix
+#'
+#' Creates a random orthogonal matrix from the special orthogonal group SO(n),
+#' which is the group of n×n orthogonal matrices with determinant 1.
+#' This is equivalent to scipy's \code{special_ortho_group.rvs} function.
+#'
+#' @param p Integer specifying the dimension of the square matrix to generate.
+#'
+#' @return An p×p orthogonal matrix with determinant 1.
+#'
+#' @details
+#' The function generates a random matrix with standard normal entries,
+#' performs QR decomposition to obtain an orthogonal matrix,
+#' and ensures the determinant is 1 by potentially flipping a column sign.
+#'
+#' @examples
+#' # Generate a 3×3 random orthogonal matrix
+#' R <- random_orthogonal_matrix(3)
+#' 
+#' # Verify orthogonality: R'R should be approximately the identity matrix
+#' t(R) %*% R
+#' 
+#' # Verify determinant is 1
+#' det(R)
+#'
+#' @importFrom stats rnorm
+#' @noRd
+cb.sims.random_rotation <- function(p) {
+  # Generate a random matrix with standard normal entries
+  M <- matrix(rnorm(p*p), nrow=p)
+  
+  # QR decomposition
+  Q <- qr.Q(qr(M))
+  
+  # Ensure the determinant is 1 (special orthogonal group)
+  if (det(Q) < 0) {
+    # Flip the sign of the first column if determinant is negative
+    Q[,1] <- -Q[,1]
+  }
+  
+  return(Q)
+}
+
 #' Sigmoidal CATE Simulation
 #' 
 #' @param n the number of samples. Defaults to \code{100}.
@@ -177,7 +221,15 @@ cb.sims.cate.sigmoidal_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1,
   true_y <- R_true %*% (true_y_covar - covar_eff_sz/2 * matrix(rep(Bs, each=2*nbreaks), nrow=2*nbreaks))
   true_y <- true_y + covar_eff_sz/2 * matrix(rep(Bs, each=2*nbreaks), nrow=2*nbreaks)
   
-  return(list(Ys=matrix(Ys, ncol=p), Ts=Ts, Xs=matrix(Xs, ncol=1), Eps=eps, Ytrue=true_y, Ttrue=true_t, Xtrue=true_x, Group.Effect=eff_sz, Covar.Effect=covar_eff_sz))
+  out <- list(Ys=matrix(Ys, ncol=p), Ts=Ts, Xs=matrix(Xs, ncol=1), Eps=eps, Ytrue=true_y, 
+              Ttrue=true_t, Xtrue=true_x, Group.Effect=eff_sz, Covar.Effect=covar_eff_sz)
+  if (rotate) {
+    # if desired, generate and apply a rotation matrix
+    R <- cb.sims.random_rotation(p)
+    out$Ys <- out$Ys %*% t(R)
+    out$R <- R
+  }
+  return(out)
 }
 
 #' Non-monotone CATE Simulation
@@ -197,6 +249,7 @@ cb.sims.cate.sigmoidal_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1,
 #' @param err the level of noise for the simulation. Defaults to \code{1}.
 #' @param nbreaks the number of breakpoints for computing the expected outcome at a given covariate level
 #' for each batch. Defaults to \code{200}.
+#' @param rotate whether to apply a random rotation to the outcomes. Defaults to \code{TRUE}.
 #' @return a list, containing the following:
 #' \item{Y}{an \code{[n, p]} matrix, containing the outcomes for each sample.}
 #' \item{Ts}{an \code{[n, 1]} matrix, containing the group labels for each sample.}
@@ -206,6 +259,7 @@ cb.sims.cate.sigmoidal_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1,
 #' \item{Ttrue}{an \code{[nbreaks*2,1]} matrix, indicating the group/batch the expected outcomes and covariate breakpoints correspond to.}
 #' \item{Xtrue}{an \code{[nbreaks*2, 1]} matrix, indicating the values of the covariate breakpoints for the theoretical expected outcome in \code{Ytrue}.}
 #' \item{Group.Effect}{The group effect magnitude.}
+#' \item{R}{Optional argument returned if a rotation is requested for the rotation matrix applied.}
 #' 
 #' @references Eric W. Bridgeford, et al. "Learning Sources of Variability from High-Dimensional Observational Studies" arXiv (2025). 
 #' 
@@ -217,7 +271,8 @@ cb.sims.cate.sigmoidal_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1,
 #' sim = cb.sims.cate.nonmonotone_sim()
 #' 
 #' @export
-cb.sims.cate.nonmonotone_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, alpha=2, beta=8, common=10, err=1, nbreaks=200) {
+cb.sims.cate.nonmonotone_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, alpha=2,
+                                         beta=8, common=10, err=1, nbreaks=200, rotate=TRUE) {
   Ts <- rbinom(n, 1, pi)
   Xs <- cb.sims.cate.simulate_covars(Ts, balance=balance, alpha=alpha, beta=beta, common=common)
   
@@ -246,7 +301,15 @@ cb.sims.cate.nonmonotone_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=
   
   true_y <- true_y_covar
   
-  return(list(Ys=matrix(Ys, ncol=p), Ts=Ts, Xs=matrix(Xs, ncol=1), Eps=eps, Ytrue=true_y, Ttrue=true_t, Xtrue=true_x, Group.Effect=eff_sz))
+  out <- list(Ys=matrix(Ys, ncol=p), Ts=Ts, Xs=matrix(Xs, ncol=1), Eps=eps, 
+              Ytrue=true_y, Ttrue=true_t, Xtrue=true_x, Group.Effect=eff_sz)
+  if (rotate) {
+    # if desired, generate and apply a rotation matrix
+    R <- cb.sims.random_rotation(p)
+    out$Ys <- out$Ys %*% t(R)
+    out$R <- R
+  }
+  return(out)
 }
 
 #' K-class Sigmoidal CATE Simulation
@@ -269,6 +332,7 @@ cb.sims.cate.nonmonotone_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=
 #' @param nbreaks the number of breakpoints for computing the expected outcome at a given covariate level
 #' for each batch. Defaults to \code{200}.
 #' @param K the number of classes. Defaults to \code{3}.
+#' @param rotate whether to apply a random rotation to the outcomes. Defaults to \code{TRUE}.
 #' @return a list, containing the following:
 #' \item{Y}{an \code{[n, p]} matrix, containing the outcomes for each sample.}
 #' \item{Ts}{an \code{[n, 1]} matrix, containing the group labels for each sample.}
@@ -280,6 +344,7 @@ cb.sims.cate.nonmonotone_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=
 #' \item{Group.Effect}{The group effect magnitude.}
 #' \item{Covar.Effect}{The covariate effect magnitude.}
 #' \item{K}{The total number of classes.}
+#' \item{R}{Optional argument returned if a rotation is requested for the rotation matrix applied.}
 #' 
 #' @references Eric W. Bridgeford, et al. "Learning Sources of Variability from High-Dimensional Observational Studies" arXiv (2025). 
 #' 
@@ -291,8 +356,9 @@ cb.sims.cate.nonmonotone_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=
 #' sim = cb.sims.cate.kclass_rotation_sim()
 #' 
 #' @export
-cb.sims.cate.kclass_rotation_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, covar_eff_sz=5, 
-                                             alpha=2, beta=8, common=10, a=2, b=8, err=1, nbreaks=200, K=3) {
+cb.sims.cate.kclass_sigmoidal_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, covar_eff_sz=5, 
+                                             alpha=2, beta=8, common=10, a=2, b=8, err=1, nbreaks=200, K=3,
+                                             rotate=TRUE) {
   rotation <- eff_sz * base::pi  # Angle of rotation of the second group
   rot_rescale <- cos(rotation)  # the rescaling factor for the rotation of the second group
   
@@ -327,8 +393,15 @@ cb.sims.cate.kclass_rotation_sim <- function(n=100, p=10, pi=0.5, balance=1, eff
   true_y <- R_true %*% (true_y_covar - covar_eff_sz/2 * matrix(rep(Bs, each=Ntrue), nrow=Ntrue))
   true_y <- true_y + covar_eff_sz/2 * matrix(rep(Bs, each=Ntrue), nrow=Ntrue)
   
-  return(list(Ys=matrix(Ys, ncol=p), Ts=Ts, Xs=matrix(Xs, ncol=1), Eps=eps, Ytrue=true_y, Ttrue=true_t, Xtrue=true_x, 
-              Group.Effect=eff_sz, Covar.Effect=covar_eff_sz, K=K))
+  out <- list(Ys=matrix(Ys, ncol=p), Ts=Ts, Xs=matrix(Xs, ncol=1), Eps=eps, Ytrue=true_y, Ttrue=true_t, Xtrue=true_x, 
+              Group.Effect=eff_sz, Covar.Effect=covar_eff_sz, K=K)
+  if (rotate) {
+    # if desired, generate and apply a rotation matrix
+    R <- cb.sims.random_rotation(p)
+    out$Ys <- out$Ys %*% t(R)
+    out$R <- R
+  }
+  return(out)
 }
 
 #' Simulate Data with Heteroskedastic Conditional Average Treatment Effects
@@ -346,6 +419,7 @@ cb.sims.cate.kclass_rotation_sim <- function(n=100, p=10, pi=0.5, balance=1, eff
 #' @param b scaling factor for sigmoid transformation
 #' @param err standard deviation for the error term
 #' @param nbreaks number of points to use for generating the true signal
+#' @param rotate whether to apply a random rotation to the outcomes. Defaults to \code{TRUE}.
 #' @return A list containing:
 #'   \item{Ys}{response matrix of size [n, p]}
 #'   \item{Ts}{treatment assignment vector of size [n]}
@@ -356,6 +430,7 @@ cb.sims.cate.kclass_rotation_sim <- function(n=100, p=10, pi=0.5, balance=1, eff
 #'   \item{Xtrue}{true covariate vector for evaluation}
 #'   \item{Group.Effect}{the effect size parameter}
 #'   \item{Covar.Effect}{the covariate effect size parameter}
+#' \item{R}{Optional argument returned if a rotation is requested for the rotation matrix applied.}
 #' 
 #' @references Eric W. Bridgeford, et al. "Learning Sources of Variability from High-Dimensional Observational Studies" arXiv (2025). 
 #' 
@@ -367,12 +442,13 @@ cb.sims.cate.kclass_rotation_sim <- function(n=100, p=10, pi=0.5, balance=1, eff
 #' sim = cb.sims.cate.heteroskedastic_sim()
 #' 
 #' @export
-cb.sims.cate.heteroskedastic_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, covar_eff_sz=5, 
-                                             alpha=2, beta=8, common=10, a=2, b=8, err=1, nbreaks=200) {
+cb.sims.cate.heteroskedastic_sim <- function(n=100, p=10, pi=0.5, balance=1, eff_sz=1, covar_eff_sz=3, 
+                                             alpha=2, beta=8, common=10, a=2, b=8, err=0.5, nbreaks=200,
+                                             rotate = TRUE) {
   # First get base data from sigmoidal_sim_cate with zero effect size
   result <- cb.sims.cate.sigmoidal_sim(n=n, p=p, pi=pi, balance=balance, eff_sz=0, 
                                        covar_eff_sz=covar_eff_sz, alpha=alpha, beta=beta, 
-                                       common=common, a=a, b=b, err=err, nbreaks=nbreaks)
+                                       common=common, a=a, b=b, err=err, nbreaks=nbreaks, rotate=FALSE)
   
   Ys <- result$Ys
   Ts <- result$Ts
@@ -382,8 +458,7 @@ cb.sims.cate.heteroskedastic_sim <- function(n=100, p=10, pi=0.5, balance=1, eff
   hetero_noise <- matrix(rnorm(length(idx)*p, sd=sqrt(2*eff_sz)), nrow=length(idx), ncol=p)
   Ys[idx,] <- Ys[idx,] + hetero_noise
   
-  # Return the same structure as sigmoidal_sim_cate
-  return(list(Ys=matrix(Ys, ncol=p), 
+  out <- list(Ys=matrix(Ys, ncol=p), 
               Ts=Ts, 
               Xs=matrix(result$Xs, ncol=1), 
               Eps=result$Eps, 
@@ -391,5 +466,12 @@ cb.sims.cate.heteroskedastic_sim <- function(n=100, p=10, pi=0.5, balance=1, eff
               Ttrue=result$Ttrue, 
               Xtrue=matrix(result$Xtrue, ncol=1), 
               Group.Effect=eff_sz, 
-              Covar.Effect=covar_eff_sz))
+              Covar.Effect=covar_eff_sz)
+  if (rotate) {
+    # if desired, generate and apply a rotation matrix
+    R <- cb.sims.random_rotation(p)
+    out$Ys <- out$Ys %*% t(R)
+    out$R <- R
+  }
+  return(out)
 }

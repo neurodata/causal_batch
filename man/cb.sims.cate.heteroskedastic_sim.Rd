@@ -10,14 +10,15 @@ cb.sims.cate.heteroskedastic_sim(
   pi = 0.5,
   balance = 1,
   eff_sz = 1,
-  covar_eff_sz = 5,
+  covar_eff_sz = 3,
   alpha = 2,
   beta = 8,
   common = 10,
   a = 2,
   b = 8,
-  err = 1,
-  nbreaks = 200
+  err = 0.5,
+  nbreaks = 200,
+  rotate = TRUE
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ cb.sims.cate.heteroskedastic_sim(
 \item{err}{standard deviation for the error term}
 
 \item{nbreaks}{number of points to use for generating the true signal}
+
+\item{rotate}{whether to apply a random rotation to the outcomes. Defaults to \code{TRUE}.}
 }
 \value{
 A list containing:
@@ -58,6 +61,7 @@ A list containing:
   \item{Xtrue}{true covariate vector for evaluation}
   \item{Group.Effect}{the effect size parameter}
   \item{Covar.Effect}{the covariate effect size parameter}
+\item{R}{Optional argument returned if a rotation is requested for the rotation matrix applied.}
 }
 \description{
 Simulate Data with Heteroskedastic Conditional Average Treatment Effects

@@ -36,6 +36,8 @@ def kernelcdtest(Y, T, X, R=1000):
 test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width=NULL, R=1000, normalize=TRUE, ...) {
   if (is.null(width)) {
     width <- npudensbw(dat=Xs, bwmethod="cv.ml")$bw
+  } else {
+    
   }
   
   DY <- dist(data.matrix(Ys), method=dist.method)

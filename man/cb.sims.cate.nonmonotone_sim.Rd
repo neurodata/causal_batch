@@ -14,7 +14,8 @@ cb.sims.cate.nonmonotone_sim(
   beta = 8,
   common = 10,
   err = 1,
-  nbreaks = 200
+  nbreaks = 200,
+  rotate = TRUE
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ cb.sims.cate.nonmonotone_sim(
 \item{nbreaks}{the number of breakpoints for computing the expected outcome at a given covariate level
 for each batch. Defaults to \code{200}.}
 
+\item{rotate}{whether to apply a random rotation to the outcomes. Defaults to \code{TRUE}.}
+
 \item{covar_eff_sz}{A parameter which governs the covariate effect size with respect to the outcome. Defaults to \code{5}..}
 }
 \value{
@@ -51,6 +54,7 @@ a list, containing the following:
 \item{Ttrue}{an \code{[nbreaks*2,1]} matrix, indicating the group/batch the expected outcomes and covariate breakpoints correspond to.}
 \item{Xtrue}{an \code{[nbreaks*2, 1]} matrix, indicating the values of the covariate breakpoints for the theoretical expected outcome in \code{Ytrue}.}
 \item{Group.Effect}{The group effect magnitude.}
+\item{R}{Optional argument returned if a rotation is requested for the rotation matrix applied.}
 }
 \description{
 Non-monotone CATE Simulation
