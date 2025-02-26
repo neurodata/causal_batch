@@ -12,7 +12,7 @@ py_run_string("
 import pandas as pd
 import dodiscover as dod
 
-def kernelcdtest(Y, T, X, R=1000):
+def kernelcdtest(Y, T, X, R=1000, ncores=1):
     df_dict = {'Group': [int(ti) for ti in T]}
     yvars = []
     for i in range(0, Y.shape[1]):
@@ -28,11 +28,11 @@ def kernelcdtest(Y, T, X, R=1000):
     
     df = pd.DataFrame(df_dict)
     group_col = 'Group'
-    stat, pval = dod.cd.KernelCDTest(null_reps=int(R)).test(df, [group_col], yvars, xvars)
+    stat, pval = dod.cd.KernelCDTest(null_reps=int(R), n_jobs=int(ncores)).test(df, [group_col], yvars, xvars)
     return pval, stat
 ")
 
-test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=1000, normalize=TRUE, ...) {
+test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=1000, normalize=TRUE, ncores=1, ...) {
   
   if (width == "scott") {
     width <- apply(Xs, 2, causalBatch:::scotts_rule)
@@ -50,7 +50,7 @@ test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=10
   Xs <- data.matrix(Xs)
   
   test.out <- tryCatch({
-    cdcov.test(DY, DT, Xs, num.bootstrap=R, distance=TRUE, width=width)
+    cdcov.test(DY, DT, Xs, num.bootstrap=R, distance=TRUE, width=width, num.threads=ncores)
   }, error=function(e) {
     return(list(Estimate=NaN, p.value=NaN))
   })
@@ -61,9 +61,9 @@ test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=10
   return(list(Estimate=test.out$statistic, p.value=test.out$p.value))
 }
 
-test.caus_cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", R=1000, width="scott", normalize=TRUE, ...) {
+test.caus_cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", R=1000, width="scott", normalize=TRUE, ncores=1, ...) {
   test.out <- tryCatch({
-    cb.detect.caus_cdcorr(Ys, Ts, Xs, R=R, dist.method=dist.method, width=width, normalize=normalize)
+    cb.detect.caus_cdcorr(Ys, Ts, Xs, R=R, dist.method=dist.method, width=width, normalize=normalize, num.threads=ncores)
   }, error=function(e) {
     return(list(Estimate=NaN, p.value=NaN))
   })
@@ -126,7 +126,7 @@ test.permanova <- function(Ys, Ts, Xs, R=1000, ...) {
               p.value=mod_alt["Tf", "Pr(>F)"]))
 }
 
-test.kcd <- function(Ys, Ts, Xs, R = 1000, ...) {
+test.kcd <- function(Ys, Ts, Xs, R = 1000, ncores=1, ...) {
   # Convert R objects to Python-compatible format
   # Y should be a matrix/data.frame, T and X should be vectors
   Ys <- data.matrix(Ys)
@@ -135,7 +135,7 @@ test.kcd <- function(Ys, Ts, Xs, R = 1000, ...) {
   Ts <- as.numeric(factor(Ts, levels=unique(Ts))) - 1
   
   # Call the Python function using reticulate
-  result <- py$kernelcdtest(Ys, Ts, Xs, R)
+  result <- py$kernelcdtest(Ys, Ts, Xs, R, ncores)
   
   # Return results as a list
   return(list(
