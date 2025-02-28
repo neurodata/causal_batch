@@ -36,7 +36,7 @@ test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=10
   
   if (length(width) == 1) {
     if (width == "scott") {
-      width <- apply(Xs, 2, scotts_rule)
+      width <- apply(Xs, 2, causalBatch::scotts_rule)
     } else if (width == "xv") {
       if (!is.null(seed)) {
         npseed(seed)
