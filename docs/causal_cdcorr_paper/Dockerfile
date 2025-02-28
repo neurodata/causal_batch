@@ -38,4 +38,4 @@ RUN R -e "install.packages('reticulate')"
 
 
 RUN R -e "library(devtools); install_github('ebridge2/RCIT')"
-RUN R -e "library(devtools); install_github('neurodata/causal_batch@2dcc016')"
+RUN R -e "library(devtools); install_github('neurodata/causal_batch@7d927b4')"
