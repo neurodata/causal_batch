@@ -34,16 +34,25 @@ def kernelcdtest(Y, T, X, R=1000, ncores=1):
 
 test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=1000, normalize=TRUE, ncores=1, ...) {
   
-  if (width == "scott") {
-    width <- apply(Xs, 2, causalBatch:::scotts_rule)
-  } else if (width == "xv") {
-    if (!is.null(seed)) {
-      npseed(seed)
+  if (length(width) == 1) {
+    if (width == "scott") {
+      width <- apply(Xs, 2, scotts_rule)
+    } else if (width == "xv") {
+      if (!is.null(seed)) {
+        npseed(seed)
+      }
+      width <- npudensbw(dat=Xs, bwmethod="cv.ml")$bw
     }
-    width <- npudensbw(dat=X.tilde, bwmethod="cv.ml")$bw
   } else if (length(width) != dim(Xs)[2]) {
     stop("You have either not specified a valid bandwidth option. Options are either 'scott', 'xv', or a length-r vector, where r is the number of columns in `Xs`.")
   }
+  # remove covariate columns with no variance after discarding imbalanced samples
+  dropped.cols <- apply(Xs, 2, var) == 0
+  if (sum(dropped.cols) > 0) {
+    message(sprintf("dropping %d columns...", sum(dropped.cols)))
+  }
+  Xs <- data.matrix(Xs[, !dropped.cols, drop=FALSE])
+  width <- width[!dropped.cols]
   
   DY <- dist(data.matrix(Ys), method=dist.method)
   DT <- causalBatch:::zero_one_dist(Ts)$DT
@@ -56,7 +65,7 @@ test.cdcorr <- function(Ys, Ts, Xs, dist.method="euclidean", width="scott", R=10
   })
   
   if (normalize) {
-    test.out$statistic <- cdcor(DY, DY, Xs, width=width, distance=TRUE)$statistic
+    test.out$statistic <- cdcor(DY, DT, Xs, width=width, distance=TRUE)$statistic
   }
   return(list(Estimate=test.out$statistic, p.value=test.out$p.value))
 }
