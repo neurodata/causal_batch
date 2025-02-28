@@ -77,13 +77,15 @@ cb.detect.caus_cdcorr <- function(Ys, Ts, Xs, prop.form=NULL, R=1000, dist.metho
     DY.tilde = dist(Y.tilde, method=dist.method)
   }
   X.tilde <- Xs[retain.ids,,drop=FALSE]
-  if (width == "scott") {
+  if (length(width) == 1) {
+    if (width == "scott") {
       width <- apply(X.tilde, 2, scotts_rule)
-  } else if (width == "xv") {
-    if (!is.null(seed)) {
-      npseed(seed)
+    } else if (width == "xv") {
+      if (!is.null(seed)) {
+        npseed(seed)
+      }
+      width <- npudensbw(dat=X.tilde, bwmethod="cv.ml")$bw
     }
-    width <- npudensbw(dat=X.tilde, bwmethod="cv.ml")$bw
   } else if (length(width) != dim(Xs)[2]) {
     stop("You have either not specified a valid bandwidth option. Options are either 'scott', 'xv', or a length-r vector, where r is the number of columns in `Xs`.")
   }
