@@ -108,6 +108,15 @@ test.rcot <- function(Ys, Ts, Xs, R=1000, ...) {
 
 test.gcm <- function(Ys, Ts, Xs, R=1000, ...) {
   res <- tryCatch({
+    wgcm.est(data.matrix(Ys), data.matrix(causalBatch:::ohe(Ts)$ohe), data.matrix(Xs), regr.meth="xgboost", nsim=R)},
+    error=function(e) {
+      return(list(stat=NaN, pvalue=NaN))
+    })
+  return(list(stat=NaN, pvalue=res))
+}
+
+test.gcm <- function(Ys, Ts, Xs, R=1000, ...) {
+  res <- tryCatch({
     gcm.test(data.matrix(Ys), data.matrix(causalBatch:::ohe(Ts)$ohe), data.matrix(Xs), regr.meth="xgboost", nsim=R)},
     error=function(e) {
       return(list(Estimate=NaN, p.value=NaN))
@@ -115,7 +124,16 @@ test.gcm <- function(Ys, Ts, Xs, R=1000, ...) {
   return(list(Estimate=res$test.statistic, p.value=res$p.value))
 }
 
-test.manova <- function(Ys, Ts, Xs, ...) {
+test.gcm <- function(Ys, Ts, Xs, R=1000, ...) {
+  res <- tryCatch({
+    gcm.test(data.matrix(Ys), data.matrix(causalBatch:::ohe(Ts)$ohe), data.matrix(Xs), regr.meth="xgboost", nsim=R)},
+    error=function(e) {
+      return(list(Estimate=NaN, p.value=NaN))
+    })
+  return(list(Estimate=res$test.statistic, p.value=res$p.value))
+}
+
+test.cmanova <- function(Ys, Ts, Xs, ...) {
   Ys <- data.matrix(Ys); Xs <- data.matrix(Xs)
   Tf <- factor(Ts)
   mod_alt <- lm(Ys ~ Xs + Tf + Tf:Xs)
@@ -124,7 +142,7 @@ test.manova <- function(Ys, Ts, Xs, ...) {
   test <- stats:::anova.mlmlist(mod_alt, mod_null)
   return(list(Estimate=test$Pillai[2], p.value=test$`Pr(>F)`[2]))
 }
-
+ 
 test.permanova <- function(Ys, Ts, Xs, R=1000, ...) {
   Tf <- factor(Ts)
   Xs <- data.matrix(Xs)
